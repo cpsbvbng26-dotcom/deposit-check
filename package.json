@@ -1,0 +1,13 @@
+{
+  "name": "deposit-check",
+  "version": "0.1.0",
+  "description": "Check the DOI metadata of a researcher's deposits (DataCite, Crossref, JaLC) against their ORCID record.",
+  "license": "MIT",
+  "author": "Takuya Nemoto (https://orcid.org/0009-0000-1406-0547)",
+  "repository": { "type": "git", "url": "https://github.com/cpsbvbng26-dotcom/deposit-check.git" },
+  "bin": { "deposit-check": "bin/deposit-check.js" },
+  "files": ["bin", "src", "action.yml", "README.md", "LICENSE"],
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node verification/check.js" },
+  "keywords": ["doi", "orcid", "datacite", "crossref", "metadata", "repository", "zenodo"]
+}
