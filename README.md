@@ -110,6 +110,12 @@ They run on every push and pull request (`.github/workflows/check.yml`).
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
 For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
 
+## Plans
+
+A submission to the Journal of Open Source Software (JOSS) is planned.
+JOSS asks for a repository public for more than six months; the first commit here is from 2026-11-02, so the earliest date is 2027-05-03.
+There is no record yet of use by anyone but the author. Whether the tool is within the scope of JOSS is for JOSS to decide.
+
 ## Licence
 
 The code is under the MIT licence ([LICENSE](LICENSE)). The text of this README and the other documents is under CC BY 4.0.
@@ -130,6 +136,8 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - 各 DOI の登録情報を DataCite・Crossref・JaLC から読み、上の表の規則で点検します。
 - 報告は Markdown か JSON で出します。
 - どこにも何も書き込みません。送るのは ORCID iD と DOI だけで、鍵もアカウントも要りません。
+
+Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、最短で 2027-05-03 です。著者以外に使われた記録はまだありません。
 
 コードは MIT、文書は CC BY 4.0 です。
 コードと検査と文書は、言語モデル Claude Code（Anthropic）を使って書きました。設計と規則は著者が決め、出力を確かめ、責任を負います。Claude は著者ではありません。
