@@ -1,0 +1,24 @@
+name: run
+# Run the tool against the live APIs and write the report to the job summary: by hand, or once a week for the author's own iD.
+on:
+  workflow_dispatch:
+    inputs:
+      orcid:
+        description: ORCID iD to check
+        required: true
+        default: 0009-0000-1406-0547
+  schedule:
+    - cron: '23 5 * * 2'
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node bin/deposit-check.js --orcid "${ORCID:-0009-0000-1406-0547}" --summary --fail-on never
+        env:
+          ORCID: ${{ inputs.orcid }}
