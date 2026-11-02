@@ -2,7 +2,8 @@
 
 ## 0.1.0 (unreleased)
 
-- The weekly run keeps one open issue for the author's own iD, comments when the counts change, and closes it when no error or warning is left. `--json-out` writes the JSON report beside another format.
+- The README records that a submission to JOSS is planned, from 2027-05-03 at the earliest.
+- The weekly run keeps one open issue for the author's own iD, comments when the counts change, and closes it when no error or warning is left. `--json-out` writes the JSON report beside another format (#3).
 
 After the first run against the live APIs (#2):
 
@@ -10,8 +11,6 @@ After the first run against the live APIs (#2):
 - Of the versions of one work, only the latest is checked, and a work missing from the ORCID record is reported once. Figshare versions, tied by their DOIs, are not flagged as unlinked.
 
 The first version (#1):
-
-The first version.
 
 - The works of an ORCID iD, from the ORCID record and from the DataCite and Crossref metadata that carries the iD.
 - The metadata of a DOI from DataCite, Crossref or JaLC.
