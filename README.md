@@ -73,8 +73,9 @@ The inputs are `orcid`, `dois` (separated by spaces or commas), `fail-on` and `m
 The report gives, for each rule it raises, what to do at the repository.
 
 The versions of one work are read together:
-- A record of all versions (Zenodo's concept DOI) is not checked on its own when one of its versions is read, since it repeats the latest version.
-- A version counts as on the ORCID record when any version of the same work is.
+- Only the latest version that was read is checked. Older versions and the record of all versions repeat it, and every finding would come once for each.
+- A work counts as on the ORCID record when any of its versions is, and a work missing from it is reported once.
+- Zenodo ties versions with IsVersionOf to the record of all versions (its concept DOI). Figshare ties them by their DOIs (.v1, .v2 after the DOI of all versions).
 
 ## What is sent where
 
@@ -83,7 +84,7 @@ The ORCID iD and the DOIs are sent, and nothing else. No key or account is neede
 | Host | What for |
 | --- | --- |
 | pub.orcid.org | The works on the ORCID record (public API, v3.0) |
-| api.datacite.org | The metadata of a DOI, and the DOIs whose creators carry the iD |
+| api.datacite.org | The metadata of a DOI, and the DOIs whose creators carry the iD (asked for both bare and as a URL, since Zenodo stores the bare iD and Figshare and OSF its URL) |
 | api.crossref.org | The metadata of a DOI, and the DOIs whose authors carry the iD |
 | api.japanlinkcenter.org | The metadata of a DOI registered by JaLC |
 
