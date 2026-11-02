@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "id": "10.5072/zenodo.100",
+      "attributes": {
+        "doi": "10.5072/zenodo.100"
+      }
+    },
+    {
+      "id": "10.5072/zenodo.101",
+      "attributes": {
+        "doi": "10.5072/zenodo.101"
+      }
+    },
+    {
+      "id": "10.5072/zenodo.400",
+      "attributes": {
+        "doi": "10.5072/zenodo.400"
+      }
+    }
+  ]
+}

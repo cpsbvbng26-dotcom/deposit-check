@@ -1,0 +1,67 @@
+{
+  "status": "OK",
+  "data": {
+    "doi": "10.51094/jxiv.example",
+    "resource_type": "preprint",
+    "content_type": "PR",
+    "title_list": [
+      {
+        "lang": "ja",
+        "title": "例の記録"
+      },
+      {
+        "lang": "en",
+        "title": "An Example Record from JaLC"
+      }
+    ],
+    "creator_list": [
+      {
+        "type": "person",
+        "names": [
+          {
+            "lang": "en",
+            "first_name": "Josiah",
+            "last_name": "Carberry"
+          }
+        ],
+        "researcher_id_list": [
+          {
+            "type": "ORCID",
+            "id_code": "https://orcid.org/0000-0002-1825-0097"
+          }
+        ]
+      }
+    ],
+    "description_list": [
+      {
+        "type": "Abstract",
+        "lang": "en",
+        "description": "A complete record used to check that a well-described deposit gives no findings: it has an abstract of a fair length, a licence given as a URL, the ORCID iD of its creator, a type, a full date, keywords, a language and a link to its other versions."
+      }
+    ],
+    "publication_date": {
+      "publication_year": "2026",
+      "publication_month": "04",
+      "publication_day": "09"
+    },
+    "keyword_list": [
+      {
+        "lang": "en",
+        "keyword": "metadata"
+      }
+    ],
+    "publisher_list": [
+      {
+        "lang": "en",
+        "publisher_name": "Example Publisher"
+      }
+    ],
+    "relation_list": [
+      {
+        "type": "URL",
+        "relation_type": "isSupplementedBy",
+        "content": "https://example.org/data"
+      }
+    ]
+  }
+}

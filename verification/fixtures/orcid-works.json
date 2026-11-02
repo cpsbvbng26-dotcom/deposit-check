@@ -1,0 +1,166 @@
+{
+  "group": [
+    {
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "doi",
+            "external-id-value": "10.5072/ZENODO.101",
+            "external-id-normalized": {
+              "value": "10.5072/zenodo.101"
+            }
+          }
+        ]
+      },
+      "work-summary": [
+        {
+          "title": {
+            "title": {
+              "value": "Complete Record"
+            }
+          },
+          "source": {
+            "source-name": {
+              "value": "DataCite"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "doi",
+            "external-id-value": "10.5072/zenodo.200",
+            "external-id-normalized": {
+              "value": "10.5072/zenodo.200"
+            }
+          }
+        ]
+      },
+      "work-summary": [
+        {
+          "title": {
+            "title": {
+              "value": "An Incomplete Record"
+            }
+          },
+          "source": {
+            "source-name": {
+              "value": "DataCite"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "doi",
+            "external-id-value": "10.5555/crossref.300",
+            "external-id-normalized": {
+              "value": "10.5555/crossref.300"
+            }
+          }
+        ]
+      },
+      "work-summary": [
+        {
+          "title": {
+            "title": {
+              "value": "An Incomplete Record"
+            }
+          },
+          "source": {
+            "source-name": {
+              "value": "DataCite"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "doi",
+            "external-id-value": "10.5072/typo.999",
+            "external-id-normalized": {
+              "value": "10.5072/typo.999"
+            }
+          }
+        ]
+      },
+      "work-summary": [
+        {
+          "title": {
+            "title": {
+              "value": "A Mistyped DOI"
+            }
+          },
+          "source": {
+            "source-name": {
+              "value": "DataCite"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "doi",
+            "external-id-value": "10.5072/zenodo.101",
+            "external-id-normalized": {
+              "value": "10.5072/zenodo.101"
+            }
+          }
+        ]
+      },
+      "work-summary": [
+        {
+          "title": {
+            "title": {
+              "value": "Complete Record (duplicate entry)"
+            }
+          },
+          "source": {
+            "source-name": {
+              "value": "DataCite"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "external-ids": {
+        "external-id": [
+          {
+            "external-id-type": "uri",
+            "external-id-value": "https://example.org/no-doi",
+            "external-id-normalized": {
+              "value": "https://example.org/no-doi"
+            }
+          }
+        ]
+      },
+      "work-summary": [
+        {
+          "title": {
+            "title": {
+              "value": "A Work without a DOI"
+            }
+          },
+          "source": {
+            "source-name": {
+              "value": "DataCite"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

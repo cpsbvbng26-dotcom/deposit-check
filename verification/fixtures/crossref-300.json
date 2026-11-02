@@ -1,0 +1,45 @@
+{
+  "status": "ok",
+  "message": {
+    "DOI": "10.5555/crossref.300",
+    "type": "posted-content",
+    "subtype": "preprint",
+    "title": [
+      "An Incomplete Record: on gaps"
+    ],
+    "author": [
+      {
+        "given": "Josiah",
+        "family": "Carberry",
+        "ORCID": "http://orcid.org/0000-0002-1825-0097"
+      }
+    ],
+    "abstract": "<jats:p>Too short to say much.</jats:p>",
+    "license": [
+      {
+        "URL": "http://creativecommons.org/licenses/by/4.0/"
+      }
+    ],
+    "posted": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          3
+        ]
+      ]
+    },
+    "issued": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          3
+        ]
+      ]
+    },
+    "language": "en",
+    "publisher": "Example Preprint Server",
+    "URL": "https://doi.org/10.5555/crossref.300"
+  }
+}

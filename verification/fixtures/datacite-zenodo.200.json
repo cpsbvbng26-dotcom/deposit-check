@@ -1,0 +1,55 @@
+{
+  "data": {
+    "id": "10.5072/zenodo.200",
+    "type": "dois",
+    "attributes": {
+      "doi": "10.5072/zenodo.200",
+      "titles": [
+        {
+          "title": "An Incomplete Record: On Gaps"
+        }
+      ],
+      "creators": [
+        {
+          "name": "Carberry, Josiah",
+          "nameType": "Personal",
+          "givenName": "Josiah",
+          "familyName": "Carberry",
+          "nameIdentifiers": []
+        },
+        {
+          "name": "Yamada, Hanako",
+          "nameType": "Personal",
+          "givenName": "Hanako",
+          "familyName": "Yamada",
+          "nameIdentifiers": []
+        }
+      ],
+      "publisher": {
+        "name": "Zenodo"
+      },
+      "publicationYear": 2026,
+      "types": {
+        "resourceTypeGeneral": "Other",
+        "resourceType": ""
+      },
+      "descriptions": [],
+      "rightsList": [
+        {
+          "rights": "All rights reserved by the authors"
+        }
+      ],
+      "dates": [
+        {
+          "date": "2026-03-02",
+          "dateType": "Issued"
+        }
+      ],
+      "subjects": [],
+      "language": null,
+      "version": "1",
+      "relatedIdentifiers": [],
+      "url": "https://zenodo.org/records/200"
+    }
+  }
+}
