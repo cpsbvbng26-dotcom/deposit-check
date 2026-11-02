@@ -1,0 +1,63 @@
+{
+  "data": {
+    "id": "10.5072/m9.figshare.500",
+    "type": "dois",
+    "attributes": {
+      "doi": "10.5072/m9.figshare.500",
+      "titles": [
+        {
+          "title": "A Figshare Record"
+        }
+      ],
+      "creators": [
+        {
+          "name": "Josiah Carberry",
+          "nameType": "Personal",
+          "givenName": "Josiah",
+          "familyName": "Carberry",
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org",
+              "nameIdentifier": "https://orcid.org/0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "publisher": "figshare",
+      "publicationYear": 2026,
+      "types": {
+        "resourceTypeGeneral": "Preprint",
+        "resourceType": ""
+      },
+      "descriptions": [
+        {
+          "description": "A Figshare record whose versions are tied by their DOIs, used to check that only the latest version is read and that it is not flagged as unlinked.",
+          "descriptionType": "Abstract"
+        }
+      ],
+      "rightsList": [
+        {
+          "rights": "CC BY 4.0",
+          "rightsUri": "https://creativecommons.org/licenses/by/4.0/"
+        }
+      ],
+      "dates": [
+        {
+          "date": "2026-02-01",
+          "dateType": "Issued"
+        }
+      ],
+      "subjects": [
+        {
+          "subject": "Complex systems",
+          "subjectScheme": "ANZSRC Fields of Research"
+        }
+      ],
+      "language": null,
+      "version": null,
+      "relatedIdentifiers": [],
+      "url": "https://figshare.com/"
+    }
+  }
+}
