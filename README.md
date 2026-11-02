@@ -30,6 +30,7 @@ node bin/deposit-check.js --orcid 0000-0002-1825-0097 --format json --fail-on wa
 | `--format markdown\|json` | The report's format. Markdown by default. |
 | `--fail-on error\|warning\|info\|never` | Exit 1 when a finding is this serious or more. `error` by default. |
 | `--out <file>` | Write the report to a file as well. |
+| `--json-out <file>` | Also write the report as JSON to a file, whatever `--format` is. |
 | `--summary` | Also append the Markdown report to `$GITHUB_STEP_SUMMARY`. |
 
 The exit status is 0 when nothing reaches `--fail-on`, 1 when something does, and 2 when the tool could not run.
@@ -107,6 +108,7 @@ node verification/check.js
 The checks run without the network. The answers of the APIs come from made-up records in `verification/fixtures`.
 They run on every push and pull request (`.github/workflows/check.yml`).
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
+For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
 
 ## Licence
 

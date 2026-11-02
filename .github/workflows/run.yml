@@ -1,5 +1,7 @@
 name: run
-# Run the tool against the live APIs and write the report to the job summary: by hand, or once a week for the author's own iD.
+# Run the tool against the live APIs: by hand, or once a week for the author's own iD.
+# The report goes to the job summary. For the author's iD it also goes to one open issue, which closes itself
+# when no error or warning is left.
 on:
   workflow_dispatch:
     inputs:
@@ -11,6 +13,7 @@ on:
     - cron: '23 5 * * 2'
 permissions:
   contents: read
+  issues: write
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -19,6 +22,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node bin/deposit-check.js --orcid "${ORCID:-0009-0000-1406-0547}" --summary --fail-on never
+      - run: node bin/deposit-check.js --orcid "${ORCID:-$OWNER_ORCID}" --summary --fail-on never --out report.md --json-out report.json > /dev/null
         env:
           ORCID: ${{ inputs.orcid }}
+          OWNER_ORCID: 0009-0000-1406-0547
+      - run: node scripts/weekly-issue.js report.json report.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER_ORCID: 0009-0000-1406-0547

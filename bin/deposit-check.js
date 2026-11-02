@@ -22,11 +22,12 @@ const USAGE = `Usage: deposit-check [--orcid <iD>] [--doi <DOI> …] [options]
   --format <f>        markdown (default) or json
   --fail-on <s>       error (default), warning, info or never: exit 1 when a finding is this serious or more
   --out <file>        write the report to a file as well as to the output
+  --json-out <file>   also write the report as JSON to a file, whatever --format is
   --summary           also append the Markdown report to $GITHUB_STEP_SUMMARY
 `;
 
 function parse(argv) {
-  const o = { orcid: null, dois: [], format: 'markdown', failOn: 'error', out: null, summary: false };
+  const o = { orcid: null, dois: [], format: 'markdown', failOn: 'error', out: null, jsonOut: null, summary: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const val = () => { if (i + 1 >= argv.length) throw new Error(a + ' needs a value'); return argv[++i]; };
@@ -35,6 +36,7 @@ function parse(argv) {
     else if (a === '--format') o.format = val();
     else if (a === '--fail-on') o.failOn = val();
     else if (a === '--out') o.out = val();
+    else if (a === '--json-out') o.jsonOut = val();
     else if (a === '--summary') o.summary = true;
     else if (a === '--help' || a === '-h') o.help = true;
     else throw new Error('unknown argument: ' + a);
@@ -62,6 +64,7 @@ async function main(argv, { get = httpGet(), stdout = process.stdout, stderr = p
   const text = o.format === 'json' ? R.json(ctx, findings) : md;
   stdout.write(text);
   if (o.out) fs.writeFileSync(o.out, text);
+  if (o.jsonOut) fs.writeFileSync(o.jsonOut, R.json(ctx, findings));
   if (o.summary && env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, md);
   return R.fails(findings, o.failOn) ? 1 : 0;
 }
