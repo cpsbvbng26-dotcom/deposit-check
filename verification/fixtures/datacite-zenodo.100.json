@@ -1,0 +1,66 @@
+{
+  "data": {
+    "id": "10.5072/zenodo.100",
+    "type": "dois",
+    "attributes": {
+      "doi": "10.5072/zenodo.100",
+      "titles": [
+        {
+          "title": "Complete Record"
+        }
+      ],
+      "creators": [
+        {
+          "name": "Carberry, Josiah",
+          "nameType": "Personal",
+          "givenName": "Josiah",
+          "familyName": "Carberry",
+          "nameIdentifiers": [
+            {
+              "nameIdentifier": "https://orcid.org/0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "publisher": {
+        "name": "Zenodo"
+      },
+      "publicationYear": 2026,
+      "types": {
+        "resourceTypeGeneral": "Preprint",
+        "resourceType": ""
+      },
+      "descriptions": [
+        {
+          "description": "A complete record used to check that a well-described deposit gives no findings: it has an abstract of a fair length, a licence given as a URL, the ORCID iD of its creator, a type, a full date, keywords, a language and a link to its other versions.",
+          "descriptionType": "Abstract"
+        }
+      ],
+      "rightsList": [
+        {
+          "rights": "Creative Commons Attribution 4.0 International",
+          "rightsUri": "https://creativecommons.org/licenses/by/4.0/legalcode",
+          "rightsIdentifier": "cc-by-4.0"
+        }
+      ],
+      "dates": [
+        {
+          "date": "2026-05-01",
+          "dateType": "Issued"
+        }
+      ],
+      "subjects": [],
+      "language": "en",
+      "version": null,
+      "relatedIdentifiers": [
+        {
+          "relatedIdentifier": "10.5072/zenodo.101",
+          "relatedIdentifierType": "DOI",
+          "relationType": "HasVersion"
+        }
+      ],
+      "url": "https://zenodo.org/records/100"
+    }
+  }
+}

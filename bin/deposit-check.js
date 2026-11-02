@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+'use strict';
+/* deposit-check: read the DOI metadata of a researcher's works and say what is missing.
+ *
+ *   deposit-check --orcid 0000-0002-1825-0097
+ *   deposit-check --doi 10.5281/zenodo.1234567 --doi 10.6084/m9.figshare.7654321.v2
+ *   deposit-check --orcid … --format json --fail-on warning
+ *
+ * Exit status: 0 when nothing reaches --fail-on, 1 when something does, 2 when the tool could not run.
+ */
+
+const fs = require('fs');
+const { gather, httpGet } = require('../src/fetch.js');
+const { audit } = require('../src/rules.js');
+const R = require('../src/report.js');
+const { validOrcid, doiOf } = require('../src/metadata.js');
+
+const USAGE = `Usage: deposit-check [--orcid <iD>] [--doi <DOI> …] [options]
+
+  --orcid <iD>        check the works on this ORCID record, and the works whose metadata carries the iD
+  --doi <DOI>         check this DOI as well (may be given more than once)
+  --format <f>        markdown (default) or json
+  --fail-on <s>       error (default), warning, info or never: exit 1 when a finding is this serious or more
+  --out <file>        write the report to a file as well as to the output
+  --summary           also append the Markdown report to $GITHUB_STEP_SUMMARY
+`;
+
+function parse(argv) {
+  const o = { orcid: null, dois: [], format: 'markdown', failOn: 'error', out: null, summary: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    const val = () => { if (i + 1 >= argv.length) throw new Error(a + ' needs a value'); return argv[++i]; };
+    if (a === '--orcid') o.orcid = val().replace(/^https?:\/\/orcid\.org\//, '').trim();
+    else if (a === '--doi') o.dois.push(...val().split(/[\s,]+/).filter(Boolean));
+    else if (a === '--format') o.format = val();
+    else if (a === '--fail-on') o.failOn = val();
+    else if (a === '--out') o.out = val();
+    else if (a === '--summary') o.summary = true;
+    else if (a === '--help' || a === '-h') o.help = true;
+    else throw new Error('unknown argument: ' + a);
+  }
+  if (o.help) return o;
+  if (!o.orcid && !o.dois.length) throw new Error('give --orcid or --doi');
+  if (o.orcid && !validOrcid(o.orcid)) throw new Error('not a valid ORCID iD (the check digit does not match): ' + o.orcid);
+  const bad = o.dois.filter((d) => !doiOf(d));
+  if (bad.length) throw new Error('not a DOI: ' + bad.join(', '));
+  if (!['markdown', 'json'].includes(o.format)) throw new Error('--format is markdown or json');
+  if (!['error', 'warning', 'info', 'never'].includes(o.failOn)) throw new Error('--fail-on is error, warning, info or never');
+  return o;
+}
+
+async function main(argv, { get = httpGet(), stdout = process.stdout, stderr = process.stderr, env = process.env } = {}) {
+  let o;
+  try { o = parse(argv); } catch (e) { stderr.write(e.message + '\n\n' + USAGE); return 2; }
+  if (o.help) { stdout.write(USAGE); return 0; }
+  let ctx;
+  try {
+    ctx = await gather({ orcid: o.orcid, dois: o.dois, get, log: (m) => stderr.write(m + '\n') });
+  } catch (e) { stderr.write('deposit-check could not run: ' + e.message + '\n'); return 2; }
+  const findings = audit(ctx);
+  const md = R.markdown(ctx, findings);
+  const text = o.format === 'json' ? R.json(ctx, findings) : md;
+  stdout.write(text);
+  if (o.out) fs.writeFileSync(o.out, text);
+  if (o.summary && env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, md);
+  return R.fails(findings, o.failOn) ? 1 : 0;
+}
+
+if (require.main === module) main(process.argv.slice(2)).then((code) => { process.exitCode = code; });
+
+module.exports = { main, parse, USAGE };

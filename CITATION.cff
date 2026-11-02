@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "deposit-check: checking the DOI metadata of a researcher's deposits against their ORCID record"
+authors:
+  - family-names: "Nemoto"
+    given-names: "Takuya"
+    orcid: "https://orcid.org/0009-0000-1406-0547"
+license: MIT
+repository-code: "https://github.com/cpsbvbng26-dotcom/deposit-check"
+version: "0.1.0"
+keywords:
+  - DOI
+  - ORCID
+  - DataCite
+  - Crossref
+  - metadata
