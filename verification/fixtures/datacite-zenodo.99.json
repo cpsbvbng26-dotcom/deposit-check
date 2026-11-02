@@ -1,0 +1,61 @@
+{
+  "data": {
+    "id": "10.5072/zenodo.99",
+    "type": "dois",
+    "attributes": {
+      "doi": "10.5072/zenodo.99",
+      "titles": [
+        {
+          "title": "Complete Record"
+        }
+      ],
+      "creators": [
+        {
+          "name": "Carberry, Josiah",
+          "nameType": "Personal",
+          "givenName": "Josiah",
+          "familyName": "Carberry",
+          "nameIdentifiers": [
+            {
+              "nameIdentifier": "0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "publisher": {
+        "name": "Zenodo"
+      },
+      "publicationYear": 2026,
+      "types": {
+        "resourceTypeGeneral": "Preprint",
+        "resourceType": ""
+      },
+      "descriptions": [],
+      "rightsList": [
+        {
+          "rights": "Creative Commons Attribution 4.0 International",
+          "rightsUri": "https://creativecommons.org/licenses/by/4.0/legalcode",
+          "rightsIdentifier": "cc-by-4.0"
+        }
+      ],
+      "dates": [
+        {
+          "date": "2026-01-10",
+          "dateType": "Issued"
+        }
+      ],
+      "subjects": [],
+      "language": "en",
+      "version": "v1",
+      "relatedIdentifiers": [
+        {
+          "relatedIdentifier": "10.5072/zenodo.100",
+          "relatedIdentifierType": "DOI",
+          "relationType": "IsVersionOf"
+        }
+      ],
+      "url": "https://zenodo.org/records/101"
+    }
+  }
+}

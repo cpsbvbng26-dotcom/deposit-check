@@ -32,6 +32,9 @@ function stubGet(log = []) {
     'https://api.datacite.org/dois/10.5072%2Fzenodo.101': 'datacite-zenodo.101.json',
     'https://api.datacite.org/dois/10.5072%2Fzenodo.200': 'datacite-zenodo.200.json',
     'https://api.datacite.org/dois/10.5072%2Fzenodo.400': 'datacite-zenodo.400.json',
+    'https://api.datacite.org/dois/10.5072%2Fzenodo.99': 'datacite-zenodo.99.json',
+    'https://api.datacite.org/dois/10.5072%2Fm9.figshare.500': 'datacite-figshare.500.json',
+    'https://api.datacite.org/dois/10.5072%2Fm9.figshare.500.v2': 'datacite-figshare.500.v2.json',
     'https://api.crossref.org/works/10.5555%2Fcrossref.300': 'crossref-300.json',
     'https://api.japanlinkcenter.org/dois/10.51094%2Fjxiv.example': 'jalc-example.json',
   };
@@ -105,11 +108,18 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const of = (doi) => all.filter((f) => f.doi === doi).map((f) => f.rule);
   ok('a DOI is looked up at DataCite, then Crossref, then JaLC', urls.indexOf('https://api.datacite.org/dois/10.51094%2Fjxiv.example') < urls.indexOf('https://api.crossref.org/works/10.51094%2Fjxiv.example')
     && urls.indexOf('https://api.crossref.org/works/10.51094%2Fjxiv.example') < urls.indexOf('https://api.japanlinkcenter.org/dois/10.51094%2Fjxiv.example'));
-  ok('the DataCite search asks for the creators that carry the iD', urls.some((u) => u.startsWith('https://api.datacite.org/dois?query=') && decodeURIComponent(u).includes('creators.nameIdentifiers.nameIdentifier:"https://orcid.org/' + OWNER + '"')));
+  /* Zenodo stores the bare iD, Figshare and OSF its URL: on 2026-11-02 the URL alone found 4 of 34 DOIs of one author. */
+  ok('the DataCite search asks for the iD both bare (Zenodo) and as a URL (Figshare, OSF)', urls.some((u) => u.startsWith('https://api.datacite.org/dois?query=')
+    && decodeURIComponent(u).includes('creators.nameIdentifiers.nameIdentifier:("' + OWNER + '" OR "https://orcid.org/' + OWNER + '"')));
+  ok('a bare iD in the metadata is read as the iD', M.fromDataCite(fixture('datacite-zenodo.101.json')).creators[0].orcid === OWNER
+    && fixture('datacite-zenodo.101.json').data.attributes.creators[0].nameIdentifiers[0].nameIdentifier === OWNER);
   ok('the complete version gives nothing, and its record of all versions is not checked on its own', of('10.5072/zenodo.101').length === 0 && of('10.5072/zenodo.100').length === 0);
   ok('unresolved: the mistyped DOI on the ORCID record', of('10.5072/typo.999').join() === 'unresolved');
-  ok('not-on-orcid: the work that carries the iD but is not on the record, and not the record of all versions of a listed version',
-    all.filter((f) => f.rule === 'not-on-orcid').map((f) => f.doi).join() === '10.5072/zenodo.400');
+  ok('not-on-orcid: each work that carries the iD but is not on the record, once, on its latest version; not a version of a listed work',
+    all.filter((f) => f.rule === 'not-on-orcid').map((f) => f.doi).join() === '10.5072/zenodo.400,10.5072/m9.figshare.500.v2', all.filter((f) => f.rule === 'not-on-orcid').map((f) => f.doi).join());
+  ok('an older version of a work is not checked on its own, however incomplete', of('10.5072/zenodo.99').length === 0);
+  ok('Figshare: only the latest version is checked, and versions tied by their DOIs are not flagged as unlinked',
+    of('10.5072/m9.figshare.500').length === 0 && of('10.5072/m9.figshare.500.v2').join() === 'keywords-missing,language-missing,not-on-orcid', of('10.5072/m9.figshare.500.v2').join());
   ok('same-title: the two deposits of the same work at two places, once', all.filter((f) => f.rule === 'same-title').map((f) => f.doi + ' ' + f.detail).join() === '10.5072/zenodo.200 same title as 10.5555/crossref.300 (Crossref)');
   ok('a DOI that could not be read is reported as such, and not as unresolved', ctx.failed.map((f) => f.doi).join() === '10.5072/broken' && !of('10.5072/broken').length);
   ok('a DOI given by hand is read too (JaLC), with no finding beyond what it lacks', of('10.51094/jxiv.example').join() === 'licence-missing', of('10.51094/jxiv.example').join());
