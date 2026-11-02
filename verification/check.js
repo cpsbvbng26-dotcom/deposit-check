@@ -192,12 +192,42 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const onlyInEnv = (y) => y.split('\n').filter((l) => l.includes('${{')).every((l) => /^\s+[A-Z][A-Z0-9_]*: \$\{\{ (inputs\.[a-z-]+|secrets\.GITHUB_TOKEN) \}\}$/.test(l));
   ok('the action passes its inputs through the environment, never into the command line', onlyInEnv(action)
     && /ORCID: \$\{\{ inputs\.orcid \}\}/.test(action) && /using: composite/.test(action));
-  const wfs = fs.readdirSync(path.join(ROOT, '.github', 'workflows')).map((f) => read(path.join('.github', 'workflows', f)));
-  ok('every workflow only reads, and passes inputs through the environment', wfs.length >= 2 && wfs.every((w) => /permissions:\n  contents: read\n(?!  \w)/.test(w) && onlyInEnv(w)));
+  const wfFiles = fs.readdirSync(path.join(ROOT, '.github', 'workflows'));
+  const wf = (f) => read(path.join('.github', 'workflows', f));
+  ok('every workflow only reads, except that the weekly run may write issues; inputs go through the environment',
+    wfFiles.length >= 2 && wfFiles.every((f) => (f === 'run.yml' ? /permissions:\n  contents: read\n  issues: write\n(?!  \w)/ : /permissions:\n  contents: read\n(?!  \w)/).test(wf(f)) && onlyInEnv(wf(f))));
   const cff = read('CITATION.cff');
   ok('CITATION.cff names one author with an ORCID iD, and no language model', (cff.match(/family-names:/g) || []).length === 1 && cff.includes('orcid: "https://orcid.org/0009-0000-1406-0547"') && !/claude|anthropic|openai|gpt/i.test(cff));
   ok('the README says how the code was written, and that Claude is not an author', readme.includes('Claude Code (Anthropic)') && readme.includes('Claude is not an author'));
   ok('the README says what is sent where, and that no key is needed', ['pub.orcid.org', 'api.datacite.org', 'api.crossref.org', 'api.japanlinkcenter.org'].every((h) => readme.includes(h)));
+
+  /* ------------------------------------------------------------ 8 */
+  console.log('\n8. The weekly issue');
+  const W = require('../scripts/weekly-issue.js');
+  const rep = (e, w, i) => ({ owner: OWNER, counts: { error: e, warning: w, info: i } });
+  let p = W.plan(null, rep(1, 2, 3), '# Deposit check\n', '2026-11-03');
+  ok('errors or warnings and no open issue: one is opened, with the counts in its title and kept in the body', p.kind === 'create'
+    && p.title === 'Deposit check: 1 errors, 2 warnings' && p.body.startsWith(W.MARK) && JSON.stringify(W.countsOf(p.body)) === '{"error":1,"warning":2,"info":3}');
+  const open = { number: 7, body: p.body };
+  p = W.plan(open, rep(1, 2, 3), '# Deposit check\n', '2026-11-10');
+  ok('the same counts a week later: the report is replaced, with no comment', p.kind === 'update' && p.number === 7 && p.comment === null);
+  p = W.plan(open, rep(0, 2, 3), '# Deposit check\n', '2026-11-10');
+  ok('the counts changed: a comment says how, since an edit sends no notification', p.kind === 'update' && (p.comment || '').includes('0 errors, 2 warnings, 3 notes (before: 1 errors, 2 warnings, 3 notes)'));
+  p = W.plan(open, rep(0, 0, 5), '# Deposit check\n', '2026-11-17');
+  ok('no error or warning left: the issue is closed with a comment; notes alone do not open one', p.kind === 'close' && p.number === 7
+    && W.plan(null, rep(0, 0, 5), '', '2026-11-17').kind === 'none');
+  ok('a long report is cut, and says where the whole one is', W.plan(null, rep(1, 0, 0), 'x'.repeat(W.LIMIT + 10), 'd').body.includes('The whole report is in the job summary'));
+  const ws = read('scripts/weekly-issue.js');
+  ok('the script posts only for the owner’s iD, and talks only to api.github.com', ws.includes('report.owner !== process.env.OWNER_ORCID')
+    && (ws.match(/https:\/\/[a-z.]+/g) || []).every((u) => u === 'https://api.github.com'));
+  const runYml = wf('run.yml');
+  ok('the weekly run writes the report as JSON and Markdown, and passes the token through the environment', runYml.includes('--out report.md --json-out report.json')
+    && runYml.includes('node scripts/weekly-issue.js report.json report.md') && /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/.test(runYml));
+  const tmp = path.join(require('os').tmpdir(), 'deposit-check-' + process.pid + '.json');
+  r = await run(['--doi', '10.5072/zenodo.101', '--json-out', tmp]);
+  ok('--json-out writes JSON whatever --format is', r.out.startsWith('# Deposit check') && JSON.parse(fs.readFileSync(tmp, 'utf8')).read === 1);
+  fs.rmSync(tmp, { force: true });
+  ok('the README says that the weekly issue exists, when it closes, and that it uses api.github.com', readme.includes('closes itself when no error or warning is left') && readme.includes('api.github.com'));
 
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
