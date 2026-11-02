@@ -84,8 +84,8 @@ const RULES = [
   {
     id: 'version-unlinked', scope: 'record', severity: 'warning',
     title: 'A version without a link to its other versions',
-    fix: 'Link the version to the record of all versions (IsVersionOf), or to the version before it (IsNewVersionOf). Zenodo and Figshare do this when a new version is made from the old one, not when a new deposit is made.',
-    check: (r) => (r.version && !r.relations.some((x) => VERSION_RELATIONS.test(x.type)) ? ['version ' + r.version + ', no version relation'] : []),
+    fix: 'Link the version to the record of all versions (IsVersionOf), or to the version before it (IsNewVersionOf). Zenodo does this when a new version is made from the old one, not when a new deposit is made. Figshare versions are tied by their DOIs (.v1, .v2), and are not flagged.',
+    check: (r) => (r.version && family(r) === r.doi && !r.relations.some((x) => VERSION_RELATIONS.test(x.type)) ? ['version ' + r.version + ', no version relation'] : []),
   },
   {
     id: 'relations-none', scope: 'record', severity: 'info',
@@ -107,6 +107,7 @@ const RULES = [
       if (!ctx.owner) return [];
       /* A version counts as listed when any version of the same work is on the record. */
       const listed = new Set(ctx.works.map((w) => family(ctx.records.get(w.doi) || { doi: w.doi, relations: [] })));
+      /* One finding for each work, on its latest version, not one for each version. */
       return [...ctx.found].filter((d) => ctx.records.has(d) && !listed.has(family(ctx.records.get(d))) && !isSkipped(ctx, d))
         .map((d) => ({ doi: d, detail: ctx.records.get(d).title }));
     },
@@ -141,19 +142,30 @@ const RULES = [
  * with IsVersionOf, or that record itself when it lists versions with HasVersion. Figshare numbers its versions
  * .v1, .v2 … after one DOI. Anything else is a family of its own. */
 function family(r) {
-  const fig = /^(10\.6084\/m9\.figshare\.\d+)(\.v\d+)?$/.exec(r.doi);
+  const fig = /^(10\.\d+\/m9\.figshare\.\d+)(\.v\d+)?$/.exec(r.doi);
   if (fig) return fig[1];
   const v = r.relations.find((x) => x.type === 'IsVersionOf' && /^10\./.test(x.id.replace(/^https?:\/\/(dx\.)?doi\.org\//, '')));
   if (v) return v.id.replace(/^https?:\/\/(dx\.)?doi\.org\//, '').toLowerCase();
   return r.doi;
 }
 
-/* A record of all versions is not checked on its own when one of its versions is read: it repeats the latest version,
- * and every finding would come twice. */
+/* Of the versions of one work that were read, only the latest is checked: the others repeat it, and every finding
+ * would come once for each version. A record of all versions (Zenodo's concept DOI, Figshare's DOI without .vN)
+ * ranks below any version; then the higher version number; then the later date. */
+function rank(r, ctx) {
+  const members = [...ctx.records.values()].filter((o) => family(o) === family(r));
+  const conceptish = members.length > 1 && family(r) === r.doi;
+  const fig = /\.v(\d+)$/.exec(r.doi);
+  const n = fig ? Number(fig[1]) : Number((/\d+/.exec(r.version || '') || ['0'])[0]);
+  return [conceptish ? 0 : 1, n, r.date || String(r.year || '')];
+}
+const before = (a, b) => (a[0] - b[0]) || (a[1] - b[1]) || (a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0);
+
 function isSkipped(ctx, doi) {
   const r = ctx.records.get(doi);
-  if (!r || !r.relations.some((x) => x.type === 'HasVersion')) return false;
-  return [...ctx.records.values()].some((o) => o.doi !== doi && family(o) === family(r));
+  if (!r) return false;
+  const mine = rank(r, ctx);
+  return [...ctx.records.values()].some((o) => o.doi !== doi && family(o) === family(r) && (before(rank(o, ctx), mine) > 0 || (before(rank(o, ctx), mine) === 0 && o.doi > doi)));
 }
 
 /* Run every rule. ctx: { owner: ORCID iD or null, works: [{doi,title}], found: Set of DOIs carrying the iD, records: Map doi → record }. */

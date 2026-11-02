@@ -46,10 +46,16 @@ async function orcidWorks(get, orcid) {
   return M.orcidWorks(json);
 }
 
+/* The DataCite search for creators that carry the iD. Repositories store it in different forms: Zenodo gives the bare
+ * iD, Figshare and OSF its URL. On 2026-11-02 the URL alone found 4 of one author's 34 DOIs, all of them outside Zenodo. */
+function dataciteQuery(orcid) {
+  return 'creators.nameIdentifiers.nameIdentifier:("' + orcid + '" OR "https://orcid.org/' + orcid + '" OR "http://orcid.org/' + orcid + '")';
+}
+
 /* DOIs whose metadata carries the iD: DataCite's search, and Crossref's filter. */
 async function carrying(get, orcid) {
   const found = new Set();
-  const dc = await get('https://api.datacite.org/dois?query=' + encodeURIComponent('creators.nameIdentifiers.nameIdentifier:"https://orcid.org/' + orcid + '"') + '&page[size]=1000');
+  const dc = await get('https://api.datacite.org/dois?query=' + encodeURIComponent(dataciteQuery(orcid)) + '&page[size]=1000');
   if (dc) M.dataciteFound(dc).forEach((d) => found.add(d));
   const cr = await get('https://api.crossref.org/works?filter=orcid:' + orcid + '&rows=1000&select=DOI');
   if (cr) M.crossrefFound(cr).forEach((d) => found.add(d));
@@ -78,4 +84,4 @@ async function gather({ orcid = null, dois = [], get, log = () => {} }) {
   return { owner: orcid, works: works.filter((w) => !unread.has(w.doi)), found, records, failed };
 }
 
-module.exports = { UA, RETRY_WAITS_MS, GAP_MS, httpGet, lookUp, orcidWorks, carrying, gather };
+module.exports = { UA, RETRY_WAITS_MS, GAP_MS, httpGet, lookUp, orcidWorks, carrying, gather, dataciteQuery };
