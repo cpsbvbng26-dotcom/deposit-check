@@ -8,7 +8,8 @@ Give it an ORCID iD, and it reads:
 
 - the works with a DOI on the public ORCID record;
 - the works whose DataCite or Crossref metadata carries that iD, on the record or not;
-- the metadata of each DOI, from DataCite, Crossref or JaLC.
+- the metadata of each DOI, from DataCite, Crossref or JaLC;
+- how OpenAlex holds each work: whether it has the work and its abstract.
 
 Then it checks each work against the rules below, and writes a report in Markdown or JSON.
 It changes nothing anywhere: every request is a GET to a public API.
@@ -63,6 +64,8 @@ The inputs are `orcid`, `dois` (separated by spaces or commas), `fail-on` and `m
 | `language-missing` | info | No language |
 | `version-unlinked` | warning | A version without a link to its other versions |
 | `relations-none` | info | No related works |
+| `openalex-missing` | info | OpenAlex does not hold the work |
+| `openalex-abstract-missing` | warning | The DOI metadata has an abstract, and OpenAlex has none |
 | `unresolved` | error | A DOI on the ORCID record is not found at DataCite, Crossref or JaLC |
 | `not-on-orcid` | warning | A work that carries your ORCID iD is not on your ORCID record |
 | `same-title` | info | Two deposits with the same title that are not linked as versions or copies |
@@ -88,6 +91,7 @@ The ORCID iD and the DOIs are sent, and nothing else. No key or account is neede
 | api.datacite.org | The metadata of a DOI, and the DOIs whose creators carry the iD (asked for both bare and as a URL, since Zenodo stores the bare iD and Figshare and OSF its URL) |
 | api.crossref.org | The metadata of a DOI, and the DOIs whose authors carry the iD |
 | api.japanlinkcenter.org | The metadata of a DOI registered by JaLC |
+| api.openalex.org | Whether OpenAlex, the open index of scholarly works, holds each work and its abstract |
 
 Requests are made one at a time, a moment apart. A refused or failed request is tried twice more, after 5 and 20 seconds.
 Crossref asks callers to give a contact address. One can be given in the environment variable `DEPOSIT_CHECK_MAILTO` (or the action's `mailto` input); none is built in.
