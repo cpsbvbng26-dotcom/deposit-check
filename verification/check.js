@@ -245,6 +245,28 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   fs.rmSync(tmp, { force: true });
   ok('the README says that the weekly issue exists, when it closes, and that it uses api.github.com', readme.includes('closes itself when no error or warning is left') && readme.includes('api.github.com'));
 
+  /* ------------------------------------------------------------ 9 */
+  {
+  console.log('\n9. The draft JOSS paper');
+  const pmd = read('paper/paper.md');
+  const bib = read('paper/paper.bib');
+  const body = pmd.replace(/^---[\s\S]*?\n---\n/, '').replace(/<!--[\s\S]*?-->/g, '');
+  const pwords = (body.match(/[A-Za-z0-9][A-Za-z0-9'’.-]*/g) || []).length;
+  ok('the body is within the JOSS length of 250 to 1000 words (' + pwords + ')', pwords >= 250 && pwords <= 1000);
+  ok('the sections JOSS asks for are there, with the AI usage disclosure, and Claude is not an author',
+    ['# Summary', '# Statement of need', '# State of the field', '# Software design', '# Research impact statement', '# AI usage disclosure', '# References'].every((h) => body.includes('\n' + h + '\n'))
+    && body.includes('Claude is not an author.') && !/name: .*Claude/.test(pmd));
+  ok('the one author has the ORCID iD of CITATION.cff', /authors:\n  - name: Takuya Nemoto\n    orcid: 0009-0000-1406-0547\n/.test(pmd) && (pmd.match(/^  - name:/gm) || []).length === 2);
+  const keys = [...bib.matchAll(/^@\w+\{([^,]+),/gm)].map((m) => m[1]);
+  const cited = [...new Set([...body.matchAll(/\[@([a-z]+)\]/g)].map((m) => m[1]))];
+  ok('every citation is in paper.bib, and every entry is cited', cited.length > 0 && cited.every((k) => keys.includes(k)) && keys.every((k) => cited.includes(k)), 'cited ' + cited.join(',') + ' / bib ' + keys.join(','));
+  const W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+  ok('the number of rules in the paper is the number of rules (' + R.RULES.length + ')', body.includes('applies ' + W[R.RULES.length] + ' rules'));
+  ok('no DOI in paper.bib until one is checked at its source', !/\bdoi\s*=/i.test(bib));
+  ok('the paper says the research impact as it is: no use by other authors yet', body.includes('There is no record yet of use by other authors.'));
+
+  }
+
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
   console.log(pass + ' checks passed.');
