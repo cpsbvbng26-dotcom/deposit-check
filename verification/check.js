@@ -38,8 +38,16 @@ function stubGet(log = []) {
     'https://api.crossref.org/works/10.5555%2Fcrossref.300': 'crossref-300.json',
     'https://api.japanlinkcenter.org/dois/10.51094%2Fjxiv.example': 'jalc-example.json',
   };
+  /* OpenAlex: most works are held with an abstract; zenodo.400 is held without one; the JaLC record is not held; zenodo.200 cannot be read. */
+  const openalex = { '10.5072/zenodo.400': 'openalex-no-abstract.json', '10.51094/jxiv.example': null };
   return async (url) => {
     log.push(url);
+    if (url.startsWith('https://api.openalex.org/works/https://doi.org/')) {
+      const d = url.slice('https://api.openalex.org/works/https://doi.org/'.length);
+      if (d === '10.5072/zenodo.200') throw new Error('https://api.openalex.org/works: HTTP 503');
+      if (d in openalex) return openalex[d] ? fixture(openalex[d]) : null;
+      return fixture('openalex-held.json');
+    }
     if (url.startsWith('https://api.datacite.org/dois?query=')) return fixture('datacite-search.json');
     if (url.startsWith('https://api.crossref.org/works?filter=orcid:')) return fixture('crossref-search.json');
     if (url === 'https://api.datacite.org/dois/10.5072%2Fbroken') throw new Error('https://api.datacite.org/dois/10.5072%2Fbroken: HTTP 500');
@@ -97,7 +105,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     && new Set(R.RULES.map((r) => r.id)).size === R.RULES.length);
   ok('every rule is raised by some case in these checks', (() => {
     const seen = new Set([...expected200, 'abstract-short', 'licence-missing', 'date-missing']);
-    return R.RULES.every((r) => seen.has(r.id) || ['unresolved', 'not-on-orcid', 'same-title'].includes(r.id));
+    return R.RULES.every((r) => seen.has(r.id) || ['unresolved', 'not-on-orcid', 'same-title', 'openalex-missing', 'openalex-abstract-missing'].includes(r.id));
   })());
 
   /* ------------------------------------------------------------ 3 */
@@ -122,7 +130,11 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     of('10.5072/m9.figshare.500').length === 0 && of('10.5072/m9.figshare.500.v2').join() === 'keywords-missing,language-missing,not-on-orcid', of('10.5072/m9.figshare.500.v2').join());
   ok('same-title: the two deposits of the same work at two places, once', all.filter((f) => f.rule === 'same-title').map((f) => f.doi + ' ' + f.detail).join() === '10.5072/zenodo.200 same title as 10.5555/crossref.300 (Crossref)');
   ok('a DOI that could not be read is reported as such, and not as unresolved', ctx.failed.map((f) => f.doi).join() === '10.5072/broken' && !of('10.5072/broken').length);
-  ok('a DOI given by hand is read too (JaLC), with no finding beyond what it lacks', of('10.51094/jxiv.example').join() === 'licence-missing', of('10.51094/jxiv.example').join());
+  ok('a DOI given by hand is read too (JaLC), with no finding beyond what it lacks, and OpenAlex not holding it', of('10.51094/jxiv.example').join() === 'licence-missing,openalex-missing', of('10.51094/jxiv.example').join());
+  ok('openalex-abstract-missing: the DOI metadata has an abstract and OpenAlex has none; not raised when the metadata has none, nor when OpenAlex could not be read',
+    of('10.5072/zenodo.400').includes('openalex-abstract-missing') && !of('10.5072/zenodo.200').some((x) => /^openalex/.test(x))
+    && R.audit({ owner: null, works: [], found: new Set(), records: new Map([['x', Object.assign({}, d200, { doi: 'x', openalex: { held: true, abstract: false } })]]) }).every((f) => f.rule !== 'openalex-abstract-missing'));
+  ok('an OpenAlex that cannot be read is no finding, and does not mark the DOI as unread', ctx.records.get('10.5072/zenodo.200').openalex === undefined && !ctx.failed.some((f) => f.doi === '10.5072/zenodo.200'));
   ok('the Crossref deposit: a short abstract, no keywords, no related works', of('10.5555/crossref.300').join() === 'abstract-short,keywords-missing,relations-none,same-title'
     || of('10.5555/crossref.300').join() === 'abstract-short,keywords-missing,relations-none', of('10.5555/crossref.300').join());
 
@@ -203,7 +215,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     contributing.includes('node verification/check.js') && contributing.includes('A check is never loosened to make a change pass.')
     && contributing.includes('A generative model is never listed as an author or a contributor.') && readme.includes('[CONTRIBUTING.md](CONTRIBUTING.md)'));
   ok('the README says how the code was written, and that Claude is not an author', readme.includes('Claude Code (Anthropic)') && readme.includes('Claude is not an author'));
-  ok('the README says what is sent where, and that no key is needed', ['pub.orcid.org', 'api.datacite.org', 'api.crossref.org', 'api.japanlinkcenter.org'].every((h) => readme.includes(h)));
+  ok('the README says what is sent where, and that no key is needed', ['pub.orcid.org', 'api.datacite.org', 'api.crossref.org', 'api.japanlinkcenter.org', 'api.openalex.org'].every((h) => readme.includes(h)));
 
   /* ------------------------------------------------------------ 8 */
   console.log('\n8. The weekly issue');
