@@ -122,6 +122,7 @@ Where each kind of contribution goes, and how to check a change, is in [CONTRIBU
 
 A submission to the Journal of Open Source Software (JOSS) is planned.
 JOSS asks for a repository public for more than six months; the first commit here is from 2026-11-02, so the earliest date is 2027-05-03.
+A draft of the paper JOSS asks for is in `paper/paper.md` and `paper/paper.bib`. Its references carry no DOI until each is checked at its source.
 There is no record yet of use by anyone but the author. Whether the tool is within the scope of JOSS is for JOSS to decide.
 
 ## Licence
