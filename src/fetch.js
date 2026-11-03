@@ -1,6 +1,6 @@
 'use strict';
 /* The only module that reaches the network. Every request is a GET to a public API that needs no key:
- * pub.orcid.org, api.datacite.org, api.crossref.org and api.japanlinkcenter.org.
+ * pub.orcid.org, api.datacite.org, api.crossref.org, api.japanlinkcenter.org and api.openalex.org.
  * `get` is passed in, so the checks can run the whole tool on recorded answers without the network. */
 
 const M = require('./metadata.js');
@@ -40,6 +40,17 @@ async function lookUp(get, doi) {
   return ja && ja.status === 'OK' && ja.data ? M.fromJaLC(ja) : null;
 }
 
+/* How OpenAlex, the open index of scholarly works, holds a DOI: { held, abstract }, or undefined when it could not be read.
+ * Reading it is never a reason to stop: an index that cannot be reached says nothing about the record. */
+async function openAlexOf(get, doi) {
+  try {
+    const w = await get('https://api.openalex.org/works/https://doi.org/' + doi);
+    return w ? { held: true, abstract: !!w.abstract_inverted_index } : { held: false, abstract: false };
+  } catch (e) {
+    return undefined;
+  }
+}
+
 async function orcidWorks(get, orcid) {
   const json = await get('https://pub.orcid.org/v3.0/' + orcid + '/works', 'application/json');
   if (!json) throw new Error('no ORCID record ' + orcid);
@@ -73,7 +84,10 @@ async function gather({ orcid = null, dois = [], get, log = () => {} }) {
   for (const doi of [...all].sort()) {
     try {
       const r = await lookUp(get, doi);
-      if (r) records.set(doi, r);
+      if (r) {
+        r.openalex = await openAlexOf(get, doi);
+        records.set(doi, r);
+      }
     } catch (e) {
       failed.push({ doi, error: e.message });
       log('could not read ' + doi + ': ' + e.message);
@@ -84,4 +98,4 @@ async function gather({ orcid = null, dois = [], get, log = () => {} }) {
   return { owner: orcid, works: works.filter((w) => !unread.has(w.doi)), found, records, failed };
 }
 
-module.exports = { UA, RETRY_WAITS_MS, GAP_MS, httpGet, lookUp, orcidWorks, carrying, gather, dataciteQuery };
+module.exports = { UA, RETRY_WAITS_MS, GAP_MS, httpGet, lookUp, openAlexOf, orcidWorks, carrying, gather, dataciteQuery };

@@ -94,6 +94,18 @@ const RULES = [
     check: (r) => (r.relations.length ? [] : ['no related identifiers']),
   },
   {
+    id: 'openalex-missing', scope: 'record', severity: 'info',
+    title: 'OpenAlex does not hold the work',
+    fix: 'OpenAlex takes new works from DataCite and Crossref, usually within days. If the work is older than that, check that its DOI metadata is complete, or ask OpenAlex through its support form.',
+    check: (r) => (r.openalex && !r.openalex.held ? ['not in OpenAlex'] : []),
+  },
+  {
+    id: 'openalex-abstract-missing', scope: 'record', severity: 'warning',
+    title: 'The DOI metadata has an abstract, and OpenAlex has none',
+    fix: 'OpenAlex reads the abstract from the DOI metadata when it next updates the work. If it still has none after some weeks, report it to OpenAlex through its support form.',
+    check: (r) => (r.abstract && r.openalex && r.openalex.held && !r.openalex.abstract ? ['OpenAlex holds the work without an abstract'] : []),
+  },
+  {
     id: 'unresolved', scope: 'set', severity: 'error',
     title: 'A DOI on the ORCID record is not found at DataCite, Crossref or JaLC',
     fix: 'Check the DOI on the ORCID record for a typing error. If the work was withdrawn, remove it from the record.',
