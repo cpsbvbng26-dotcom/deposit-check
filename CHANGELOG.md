@@ -2,7 +2,8 @@
 
 ## 0.1.0 (unreleased)
 
-- `CONTRIBUTING.md`: where each kind of contribution goes, and how to check a change.
+- Two rules read OpenAlex: `openalex-missing` (the index does not hold the work) and `openalex-abstract-missing` (the DOI metadata has an abstract and the index has none). An OpenAlex that cannot be read gives no finding.
+- `CONTRIBUTING.md` (#6): where each kind of contribution goes, and how to check a change.
 - The README records that a submission to JOSS is planned, from 2027-05-03 at the earliest (#5).
 - The weekly run keeps one open issue for the author's own iD, comments when the counts change, and closes it when no error or warning is left. `--json-out` writes the JSON report beside another format (#3).
 
