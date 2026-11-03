@@ -110,6 +110,10 @@ They run on every push and pull request (`.github/workflows/check.yml`).
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
 For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
 
+## Contributing
+
+Where each kind of contribution goes, and how to check a change, is in [CONTRIBUTING.md](CONTRIBUTING.md). The changes so far are in [CHANGELOG.md](CHANGELOG.md).
+
 ## Plans
 
 A submission to the Journal of Open Source Software (JOSS) is planned.
