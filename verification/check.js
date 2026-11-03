@@ -198,6 +198,10 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     wfFiles.length >= 2 && wfFiles.every((f) => (f === 'run.yml' ? /permissions:\n  contents: read\n  issues: write\n(?!  \w)/ : /permissions:\n  contents: read\n(?!  \w)/).test(wf(f)) && onlyInEnv(wf(f))));
   const cff = read('CITATION.cff');
   ok('CITATION.cff names one author with an ORCID iD, and no language model', (cff.match(/family-names:/g) || []).length === 1 && cff.includes('orcid: "https://orcid.org/0009-0000-1406-0547"') && !/claude|anthropic|openai|gpt/i.test(cff));
+  const contributing = read('CONTRIBUTING.md');
+  ok('CONTRIBUTING says where issues and pull requests go, how to run the checks, that checks are not loosened, and how the models are disclosed; the README points to it',
+    contributing.includes('node verification/check.js') && contributing.includes('A check is never loosened to make a change pass.')
+    && contributing.includes('A generative model is never listed as an author or a contributor.') && readme.includes('[CONTRIBUTING.md](CONTRIBUTING.md)'));
   ok('the README says how the code was written, and that Claude is not an author', readme.includes('Claude Code (Anthropic)') && readme.includes('Claude is not an author'));
   ok('the README says what is sent where, and that no key is needed', ['pub.orcid.org', 'api.datacite.org', 'api.crossref.org', 'api.japanlinkcenter.org'].every((h) => readme.includes(h)));
 
