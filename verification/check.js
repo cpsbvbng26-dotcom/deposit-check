@@ -210,6 +210,11 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     wfFiles.length >= 2 && wfFiles.every((f) => (f === 'run.yml' ? /permissions:\n  contents: read\n  issues: write\n(?!  \w)/ : /permissions:\n  contents: read\n(?!  \w)/).test(wf(f)) && onlyInEnv(wf(f))));
   const cff = read('CITATION.cff');
   ok('CITATION.cff names one author with an ORCID iD, and no language model', (cff.match(/family-names:/g) || []).length === 1 && cff.includes('orcid: "https://orcid.org/0009-0000-1406-0547"') && !/claude|anthropic|openai|gpt/i.test(cff));
+  /* The DOIs that Zenodo gave on release (DataCite: 24033082 is v0.1.0 and IsVersionOf 24033081). */
+  const readme0 = read('README.md');
+  ok('the README, in both languages, and CITATION.cff give the DOI of version 0.1.0 and the DOI of every version; the version is that of package.json',
+    ['10.5281/zenodo.24033082', '10.5281/zenodo.24033081'].every((d) => cff.includes('value: "' + d + '"') && (readme0.match(new RegExp('\\(https://doi\\.org/' + d.replace(/\./g, '\\.') + '\\)', 'g')) || []).length === 2)
+    && cff.includes('doi: "10.5281/zenodo.24033081"') && cff.includes('version: "' + JSON.parse(read('package.json')).version + '"') && readme0.includes('## Citing'));
   const contributing = read('CONTRIBUTING.md');
   ok('CONTRIBUTING says where issues and pull requests go, how to run the checks, that checks are not loosened, and how the models are disclosed; the README points to it',
     contributing.includes('node verification/check.js') && contributing.includes('A check is never loosened to make a change pass.')

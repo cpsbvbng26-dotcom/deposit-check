@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-07)
+
+- Released on GitHub and archived at Zenodo: version DOI 10.5281/zenodo.24033082, and 10.5281/zenodo.24033081 for every version. The README, in both languages, and `CITATION.cff` give both.
 
 - A draft of the JOSS paper, `paper/paper.md` and `paper/paper.bib`.
 - Two rules read OpenAlex (#7): `openalex-missing` (the index does not hold the work) and `openalex-abstract-missing` (the DOI metadata has an abstract and the index has none). An OpenAlex that cannot be read gives no finding.

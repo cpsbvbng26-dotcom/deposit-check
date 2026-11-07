@@ -114,6 +114,12 @@ They run on every push and pull request (`.github/workflows/check.yml`).
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
 For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
 
+## Citing
+
+Version 0.1.0 is archived at Zenodo: [10.5281/zenodo.24033082](https://doi.org/10.5281/zenodo.24033082).
+The DOI [10.5281/zenodo.24033081](https://doi.org/10.5281/zenodo.24033081) stands for every version and resolves to the latest one.
+Cite the version you used. `CITATION.cff` gives the citation, and GitHub shows it as "Cite this repository".
+
 ## Contributing
 
 Where each kind of contribution goes, and how to check a change, is in [CONTRIBUTING.md](CONTRIBUTING.md). The changes so far are in [CHANGELOG.md](CHANGELOG.md).
@@ -147,6 +153,10 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - どこにも何も書き込みません。送るのは ORCID iD と DOI だけで、鍵もアカウントも要りません。
 
 Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、最短で 2027-05-03 です。著者以外に使われた記録はまだありません。
+
+版 0.1.0 は Zenodo に保存してあります（DOI [10.5281/zenodo.24033082](https://doi.org/10.5281/zenodo.24033082)）。
+すべての版に共通する DOI は [10.5281/zenodo.24033081](https://doi.org/10.5281/zenodo.24033081) で、いちばん新しい版を指します。
+引用するときは、使った版の DOI を挙げます。
 
 コードは MIT、文書は CC BY 4.0 です。
 コードと検査と文書は、言語モデル Claude Code（Anthropic）を使って書きました。設計と規則は著者が決め、出力を確かめ、責任を負います。Claude は著者ではありません。
