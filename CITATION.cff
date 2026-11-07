@@ -9,6 +9,15 @@ authors:
 license: MIT
 repository-code: "https://github.com/cpsbvbng26-dotcom/deposit-check"
 version: "0.1.0"
+date-released: "2026-11-07"
+doi: "10.5281/zenodo.24033081"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24033081"
+    description: "Every version; resolves to the latest"
+  - type: doi
+    value: "10.5281/zenodo.24033082"
+    description: "Version 0.1.0"
 keywords:
   - DOI
   - ORCID
