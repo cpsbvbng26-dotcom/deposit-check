@@ -210,6 +210,12 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     wfFiles.length >= 2 && wfFiles.every((f) => (f === 'run.yml' ? /permissions:\n  contents: read\n  issues: write\n(?!  \w)/ : /permissions:\n  contents: read\n(?!  \w)/).test(wf(f)) && onlyInEnv(wf(f))));
   const cff = read('CITATION.cff');
   ok('CITATION.cff names one author with an ORCID iD, and no language model', (cff.match(/family-names:/g) || []).length === 1 && cff.includes('orcid: "https://orcid.org/0009-0000-1406-0547"') && !/claude|anthropic|openai|gpt/i.test(cff));
+  /* Zenodo reads .zenodo.json before CITATION.cff, so the disclosure has to be in it too. */
+  const zen = JSON.parse(read('.zenodo.json'));
+  ok('.zenodo.json names the one author of CITATION.cff, the licence of LICENSE, and says Claude is not an author',
+    Array.isArray(zen.creators) && zen.creators.length === 1 && zen.creators[0].orcid === '0009-0000-1406-0547'
+    && zen.license === 'mit' && /Claude Code \(Anthropic\)/.test(zen.notes || '') && (zen.notes || '').includes('Claude is not an author.')
+    && !/claude|anthropic/i.test(JSON.stringify(zen.creators)));
   /* The DOIs that Zenodo gave on release (DataCite: 24033082 is v0.1.0 and IsVersionOf 24033081). */
   const readme0 = read('README.md');
   ok('the README, in both languages, and CITATION.cff give the DOI of version 0.1.0 and the DOI of every version; the version is that of package.json',
