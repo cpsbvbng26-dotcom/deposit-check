@@ -1,0 +1,23 @@
+{
+  "title": "deposit-check: checking the DOI metadata of a researcher's deposits against their ORCID record",
+  "description": "<p>deposit-check reads the DOI metadata of a researcher's works, from DataCite, Crossref and JaLC, and says what is missing or inconsistent against the researcher's ORCID record: abstracts, licences, ORCID iDs on the author's name, the links between versions, and works missing from the ORCID record. It writes nothing anywhere and needs no key or account; it sends only the ORCID iD and the DOIs.</p>",
+  "upload_type": "software",
+  "license": "mit",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Nemoto, Takuya",
+      "orcid": "0009-0000-1406-0547"
+    }
+  ],
+  "keywords": [
+    "DOI",
+    "ORCID",
+    "DataCite",
+    "Crossref",
+    "metadata",
+    "repository",
+    "Zenodo"
+  ],
+  "notes": "The code, the checks and the README were written with Claude Code (Anthropic) at the author's request. The author decided the design and the rules, reviewed the output and is responsible for it. Claude is not an author. The code is MIT; the README and the other documents are CC BY 4.0."
+}
