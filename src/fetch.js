@@ -29,6 +29,13 @@ function httpGet({ mailto = process.env.DEPOSIT_CHECK_MAILTO, wait = pause } = {
   };
 }
 
+/* Recorded answers in place of the network: an object from URL to the JSON an API gave. A URL that is not there is
+ * a 404. Keys that start with _ are comments. Nothing is fetched; this is for the example in examples/ and for
+ * trying the action without the network. */
+function answersGet(answers) {
+  return async (url) => (!url.startsWith('_') && Object.prototype.hasOwnProperty.call(answers, url) ? answers[url] : null);
+}
+
 /* The metadata of one DOI: DataCite first, then Crossref, then JaLC. */
 async function lookUp(get, doi) {
   const enc = encodeURIComponent(doi);
@@ -98,4 +105,4 @@ async function gather({ orcid = null, dois = [], get, log = () => {} }) {
   return { owner: orcid, works: works.filter((w) => !unread.has(w.doi)), found, records, failed };
 }
 
-module.exports = { UA, RETRY_WAITS_MS, GAP_MS, httpGet, lookUp, openAlexOf, orcidWorks, carrying, gather, dataciteQuery };
+module.exports = { UA, RETRY_WAITS_MS, GAP_MS, httpGet, answersGet, lookUp, openAlexOf, orcidWorks, carrying, gather, dataciteQuery };

@@ -168,4 +168,21 @@ function orcidWorks(json) {
 const dataciteFound = (json) => (json.data || []).map((d) => String(d.attributes.doi || d.id || '').toLowerCase()).filter(Boolean);
 const crossrefFound = (json) => ((json.message || {}).items || []).map((i) => String(i.DOI || '').toLowerCase()).filter(Boolean);
 
-module.exports = { plain, orcidOf, doiOf, validOrcid, licenceOf, fromDataCite, fromCrossref, fromJaLC, orcidWorks, dataciteFound, crossrefFound };
+/* The types expected for some DOIs, from a JSON file: { "<DOI>": "<resourceTypeGeneral>", … }.
+ * Keys that start with _ are comments. A key that is not a DOI, or a type that is not one word, is refused,
+ * so that a mistyped file does not pass as a file with no expectations. */
+function expectedTypes(json) {
+  if (!json || typeof json !== 'object' || Array.isArray(json)) throw new Error('the expected types are not a JSON object');
+  const out = new Map();
+  for (const [k, v] of Object.entries(json)) {
+    if (k.startsWith('_')) continue;
+    const doi = doiOf(k);
+    if (!doi || doi !== k.trim().toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//, '')) throw new Error('not a DOI in the expected types: ' + k);
+    if (typeof v !== 'string' || !/^[A-Za-z]+$/.test(v)) throw new Error('not a resource type for ' + k + ': ' + JSON.stringify(v));
+    out.set(doi, v);
+  }
+  if (!out.size) throw new Error('no DOI in the expected types');
+  return out;
+}
+
+module.exports = { expectedTypes, plain, orcidOf, doiOf, validOrcid, licenceOf, fromDataCite, fromCrossref, fromJaLC, orcidWorks, dataciteFound, crossrefFound };
