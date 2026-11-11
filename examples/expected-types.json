@@ -1,0 +1,5 @@
+{
+  "_": "The resource type each deposit should have, as DataCite's resourceTypeGeneral.",
+  "10.5072/example.1": "Software",
+  "10.5072/example.2": "Preprint"
+}

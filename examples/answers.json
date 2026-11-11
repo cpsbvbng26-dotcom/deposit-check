@@ -1,0 +1,163 @@
+{
+  "_": "Made-up answers of the APIs for the example: two deposits under the DataCite test prefix 10.5072, by ORCID's fictitious researcher Josiah Carberry. A URL that is not here is answered as a 404. Nothing is fetched.",
+  "https://api.datacite.org/dois/10.5072%2Fexample.1": {
+    "data": {
+      "id": "10.5072/example.1",
+      "type": "dois",
+      "attributes": {
+        "doi": "10.5072/example.1",
+        "titles": [
+          {
+            "title": "An Example Program"
+          }
+        ],
+        "creators": [
+          {
+            "name": "Carberry, Josiah",
+            "nameType": "Personal",
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifiers": [
+              {
+                "nameIdentifier": "0000-0002-1825-0097",
+                "nameIdentifierScheme": "ORCID"
+              }
+            ]
+          }
+        ],
+        "publisher": {
+          "name": "Zenodo"
+        },
+        "publicationYear": 2026,
+        "types": {
+          "resourceTypeGeneral": "Dataset",
+          "resourceType": ""
+        },
+        "descriptions": [
+          {
+            "description": "<p>A made-up deposit of a small program. It was meant to be registered as software, and was registered as a dataset by mistake, which is what the example shows: the rest of its metadata is complete.</p>",
+            "descriptionType": "Abstract"
+          }
+        ],
+        "rightsList": [
+          {
+            "rights": "Creative Commons Attribution 4.0 International",
+            "rightsUri": "https://creativecommons.org/licenses/by/4.0/legalcode",
+            "rightsIdentifier": "cc-by-4.0"
+          }
+        ],
+        "dates": [
+          {
+            "date": "2026-06-01",
+            "dateType": "Issued"
+          }
+        ],
+        "subjects": [
+          {
+            "subject": "example"
+          },
+          {
+            "subject": "software"
+          }
+        ],
+        "language": "en",
+        "relatedIdentifiers": [
+          {
+            "relatedIdentifier": "10.5072/example.2",
+            "relatedIdentifierType": "DOI",
+            "relationType": "IsSupplementTo"
+          }
+        ],
+        "url": "https://example.org/records/example.1"
+      }
+    }
+  },
+  "https://api.datacite.org/dois/10.5072%2Fexample.2": {
+    "data": {
+      "id": "10.5072/example.2",
+      "type": "dois",
+      "attributes": {
+        "doi": "10.5072/example.2",
+        "titles": [
+          {
+            "title": "An Example Preprint"
+          }
+        ],
+        "creators": [
+          {
+            "name": "Carberry, Josiah",
+            "nameType": "Personal",
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifiers": [
+              {
+                "nameIdentifier": "0000-0002-1825-0097",
+                "nameIdentifierScheme": "ORCID"
+              }
+            ]
+          }
+        ],
+        "publisher": {
+          "name": "Zenodo"
+        },
+        "publicationYear": 2026,
+        "types": {
+          "resourceTypeGeneral": "Preprint",
+          "resourceType": ""
+        },
+        "descriptions": [
+          {
+            "description": "<p>A made-up preprint that describes the program of the other example deposit. Its metadata is complete, and its type is the one intended, so the example reports nothing for it.</p>",
+            "descriptionType": "Abstract"
+          }
+        ],
+        "rightsList": [
+          {
+            "rights": "Creative Commons Attribution 4.0 International",
+            "rightsUri": "https://creativecommons.org/licenses/by/4.0/legalcode",
+            "rightsIdentifier": "cc-by-4.0"
+          }
+        ],
+        "dates": [
+          {
+            "date": "2026-06-01",
+            "dateType": "Issued"
+          }
+        ],
+        "subjects": [
+          {
+            "subject": "example"
+          },
+          {
+            "subject": "preprint"
+          }
+        ],
+        "language": "en",
+        "relatedIdentifiers": [
+          {
+            "relatedIdentifier": "10.5072/example.1",
+            "relatedIdentifierType": "DOI",
+            "relationType": "IsSupplementedBy"
+          }
+        ],
+        "url": "https://example.org/records/example.2"
+      }
+    }
+  },
+  "https://api.openalex.org/works/https://doi.org/10.5072/example.1": {
+    "id": "https://openalex.org/W1",
+    "abstract_inverted_index": {
+      "A": [
+        0
+      ]
+    }
+  },
+  "https://api.openalex.org/works/https://doi.org/10.5072/example.2": {
+    "id": "https://openalex.org/W2",
+    "abstract_inverted_index": {
+      "A": [
+        0
+      ]
+    }
+  }
+}
