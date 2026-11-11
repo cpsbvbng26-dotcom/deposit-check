@@ -7,7 +7,8 @@ deposit-check is maintained by one person, Takuya Nemoto. Contributions are welc
 | What | Where |
 | --- | --- |
 | A rule that is wrong for some deposits, or a rule that is missing | [An issue](https://github.com/cpsbvbng26-dotcom/deposit-check/issues/new). Give a DOI that shows it, if you can. |
-| A bug, a question or a suggestion | [An issue](https://github.com/cpsbvbng26-dotcom/deposit-check/issues/new) |
+| A bug | [An issue](https://github.com/cpsbvbng26-dotcom/deposit-check/issues/new?template=bug_report.yml), with the bug report form (`.github/ISSUE_TEMPLATE/bug_report.yml`). It asks for the steps to reproduce, the version and the environment. |
+| A question or a suggestion | [An issue](https://github.com/cpsbvbng26-dotcom/deposit-check/issues/new) |
 | A change to the code, the rules or the documents | A pull request, as below |
 
 Issues are public. Do not put personal data in them.
