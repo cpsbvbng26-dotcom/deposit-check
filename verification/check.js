@@ -10,6 +10,7 @@ const ROOT = path.join(__dirname, '..');
 const FIX = path.join(__dirname, 'fixtures');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const fixture = (f) => JSON.parse(fs.readFileSync(path.join(FIX, f), 'utf8'));
+const fixtureAt = (f) => JSON.parse(read(f));
 
 let pass = 0;
 const fails = [];
@@ -103,9 +104,10 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('every rule has an id, a scope, a severity, a title and a fix, and the ids are distinct',
     R.RULES.every((r) => /^[a-z]+(-[a-z]+)*$/.test(r.id) && ['record', 'set'].includes(r.scope) && R.SEVERITIES.includes(r.severity) && r.title && r.fix.length > 20)
     && new Set(R.RULES.map((r) => r.id)).size === R.RULES.length);
+  /* The set rules are raised in section 3, and type-unexpected in section 10. */
   ok('every rule is raised by some case in these checks', (() => {
     const seen = new Set([...expected200, 'abstract-short', 'licence-missing', 'date-missing']);
-    return R.RULES.every((r) => seen.has(r.id) || ['unresolved', 'not-on-orcid', 'same-title', 'openalex-missing', 'openalex-abstract-missing'].includes(r.id));
+    return R.RULES.every((r) => seen.has(r.id) || ['unresolved', 'not-on-orcid', 'same-title', 'openalex-missing', 'openalex-abstract-missing', 'type-unexpected'].includes(r.id));
   })());
 
   /* ------------------------------------------------------------ 3 */
@@ -277,6 +279,131 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('the paper says the research impact as it is: no use by other authors yet', body.includes('There is no record yet of use by other authors.'));
 
   }
+
+  /* ------------------------------------------------------------ 10 */
+  console.log('\n10. Expected types');
+  const ex = M.expectedTypes({ _: 'a comment', '10.5072/Zenodo.101': 'Software', 'https://doi.org/10.5072/zenodo.200': 'Dataset' });
+  ok('a file of expected types is read: comments are skipped, DOIs are lower-cased and may be given as URLs',
+    ex.size === 2 && ex.get('10.5072/zenodo.101') === 'Software' && ex.get('10.5072/zenodo.200') === 'Dataset');
+  const refused = (j) => { try { M.expectedTypes(j); return false; } catch (e) { return true; } };
+  ok('a key that is not a DOI, a type that is not one word, an empty file and a list are refused',
+    refused({ 'zenodo.101': 'Software' }) && refused({ '10.5072/zenodo.101': 'Journal article' }) && refused({ '10.5072/zenodo.101': 3 })
+    && refused({ _: 'only a comment' }) && refused([]) && !refused({ '10.5072/zenodo.101': 'software' }));
+  const typed = (rec, expected) => R.audit({ owner: null, works: [], found: new Set(), records: new Map([[rec.doi, rec]]), expected: new Map(Object.entries(expected)) })
+    .filter((f) => f.rule === 'type-unexpected').map((f) => f.detail);
+  ok('type-unexpected: a DataCite record registered under another type; the case of the type does not matter',
+    typed(d101, { '10.5072/zenodo.101': 'Software' }).join() === 'registered as Preprint, expected Software'
+    && typed(d101, { '10.5072/zenodo.101': 'preprint' }).length === 0 && typed(d101, {}).length === 0);
+  ok('type-unexpected: a type given for the record of all versions holds for its versions',
+    typed(d101, { '10.5072/zenodo.100': 'Dataset' }).join() === 'registered as Preprint, expected Dataset');
+  ok('type-unexpected: Crossref and JaLC records are not compared, since their types are named in other words',
+    typed(c300, { '10.5555/crossref.300': 'Preprint' }).length === 0 && typed(j, { '10.51094/jxiv.example': 'Preprint' }).length === 0);
+  ok('type-unexpected reads the resourceTypeGeneral of DataCite', fixture('datacite-zenodo.101.json').data.attributes.types.resourceTypeGeneral === d101.type.general);
+  const ag = F.answersGet({ _: 'x', 'https://a/': { a: 1 } });
+  ok('recorded answers: a URL in the file gives its answer, any other is a 404', JSON.stringify(await ag('https://a/')) === '{"a":1}' && (await ag('https://b/')) === null && (await ag('_')) === null);
+  const tmpTypes = path.join(require('os').tmpdir(), 'deposit-check-types-' + process.pid + '.json');
+  fs.writeFileSync(tmpTypes, JSON.stringify({ '10.5072/zenodo.101': 'Software' }));
+  r = await run(['--expect-types', tmpTypes, '--format', 'json']);
+  ok('--expect-types alone: the DOIs in the file are checked, and a differing type is a warning', r.code === 0
+    && JSON.parse(r.out).findings.map((f) => f.rule + ' ' + f.doi).join() === 'type-unexpected 10.5072/zenodo.101');
+  fs.writeFileSync(tmpTypes, '{ "10.5072/zenodo.101": "Software", }');
+  r = await run(['--expect-types', tmpTypes]);
+  ok('a file of expected types that cannot be read: exit 2, before any request', r.code === 2 && r.out === '');
+  fs.rmSync(tmpTypes, { force: true });
+
+  /* ------------------------------------------------------------ 11 */
+  console.log('\n11. The example');
+  const EXAMPLE = ['--answers', 'examples/answers.json', '--expect-types', 'examples/expected-types.json'];
+  const exampleRun = async (extra) => {
+    const out = sink(); const err = sink();
+    const cwd = process.cwd(); process.chdir(ROOT);
+    try {
+      /* The network is not reached: a request that is not answered from the file would throw here. */
+      const code = await CLI.main(EXAMPLE.concat(extra), { get: async (u) => { throw new Error('network: ' + u); }, stdout: out, stderr: err, env: {} });
+      return { code, out: out.text, err: err.text };
+    } finally { process.chdir(cwd); }
+  };
+  r = await exampleRun([]);
+  ok('the example runs without the network and writes examples/report.md as it is, exit 0', r.code === 0 && r.out === read('examples/report.md') && r.err === '', r.err);
+  ok('the example shows type-unexpected, and nothing else', /\(`type-unexpected`\) \| registered as Dataset, expected Software \|/.test(r.out)
+    && [...r.out.matchAll(/\(`([a-z-]+)`\)/g)].map((m) => m[1]).join() === 'type-unexpected');
+  r = await exampleRun(['--fail-on', 'warning']);
+  ok('the example fails once warnings count, exit 1', r.code === 1);
+  const exReadme = read('examples/README.md');
+  const exCmd = 'node bin/deposit-check.js ' + EXAMPLE.join(' ');
+  ok('examples/README.md gives the two commands that these checks run, and the action runs them too',
+    exReadme.includes('\n' + exCmd + '\n') && exReadme.includes('\n' + exCmd + ' --fail-on warning\n') && readme.includes('[`examples/`](examples/)')
+    && /uses: \.\/\n\s+with:\n\s+expect-types: examples\/expected-types\.json\n\s+answers: examples\/answers\.json\n\s+- name/.test(wf('check.yml'))
+    && /continue-on-error: true\n\s+uses: \.\/\n\s+with:\n\s+expect-types: examples\/expected-types\.json\n\s+answers: examples\/answers\.json\n\s+fail-on: warning\n/.test(wf('check.yml'))
+    && wf('check.yml').includes("if: steps.warnings.outcome != 'failure'\n        run: exit 1"));
+  ok('the example is made up: the DataCite test prefix, and ORCID’s fictitious researcher', Object.keys(fixtureAt('examples/answers.json')).filter((k) => !k.startsWith('_'))
+    .every((k) => /10\.5072(%2F|\/)example\.\d$/.test(k)) && JSON.stringify(fixtureAt('examples/answers.json')).includes(OWNER));
+
+  /* ------------------------------------------------------------ 12 */
+  console.log('\n12. Breaking a complete record');
+  /* A complete record gives nothing. Each break changes one thing, and must raise its rule and no other.
+   * If a break raised nothing, the rule would be looking at nothing. */
+  const other = { name: 'A. N. Other', person: true, orcid: null };
+  const BREAKS = [
+    ['abstract-missing', { abstract: '' }],
+    ['abstract-short', { abstract: 'Short.' }],
+    ['licence-missing', { rights: [] }],
+    ['licence-unreadable', { rights: [{ text: 'All rights reserved', uri: '', id: '', licence: null }] }],
+    ['owner-orcid-missing', { creators: [Object.assign({}, d101.creators[0], { orcid: '0000-0001-5109-3700' })] }],
+    ['creators-orcid-missing', { creators: [d101.creators[0], other] }],
+    ['type-generic', { type: { general: 'Other', specific: '' } }],
+    ['type-unexpected', {}, { '10.5072/zenodo.101': 'Software' }],
+    ['date-missing', { date: null }],
+    ['keywords-missing', { keywords: [] }],
+    ['language-missing', { language: '' }],
+    ['version-unlinked', { relations: [{ type: 'References', id: '10.1/x', idType: 'DOI' }] }],
+    ['relations-none', { relations: [], version: '' }],
+    ['openalex-missing', { openalex: { held: false, abstract: false } }],
+    ['openalex-abstract-missing', { openalex: { held: true, abstract: false } }],
+  ];
+  const complete = Object.assign({}, d101, { openalex: { held: true, abstract: true } });
+  const raised = (rec, expected) => R.audit({ owner: OWNER, works: [], found: new Set(), records: new Map([[rec.doi, rec]]), expected: expected ? new Map(Object.entries(expected)) : null }).map((f) => f.rule);
+  ok('the complete record, held by OpenAlex with its abstract, gives nothing', raised(complete).length === 0, raised(complete).join());
+  for (const [id, patch, expected] of BREAKS) {
+    const got = raised(Object.assign({}, complete, patch), expected);
+    ok('break for ' + id + ': raises it and no other', got.join() === id, got.join() || 'nothing');
+  }
+  const recordRules = R.RULES.filter((x) => x.scope === 'record').map((x) => x.id);
+  ok('there is one break for each rule that reads a single record, in the order of the rules', BREAKS.map((b) => b[0]).join() === recordRules.join());
+  const said = /The checks break a complete record in (\d+) ways, one for each rule that reads a single record/.exec(readme);
+  ok('the number of breaks the README gives is the number of breaks (' + BREAKS.length + ')', said !== null && Number(said[1]) === BREAKS.length, said ? 'README ' + said[1] : 'not found in the README');
+
+  /* ------------------------------------------------------------ 13 */
+  console.log('\n13. What the README says of the repository');
+  const runtime = ['bin', 'src', 'scripts'].flatMap((d) => fs.readdirSync(path.join(ROOT, d)).filter((f) => f.endsWith('.js')).map((f) => d + '/' + f));
+  const builtin = new Set(require('module').builtinModules);
+  const loaded = runtime.flatMap((f) => [...read(f).matchAll(/\brequire\(\s*['"]([^'"]+)['"]\s*\)|\bimport\s*\(\s*['"]([^'"]+)['"]|\bfrom\s+['"]([^'"]+)['"]/g)].map((m) => [f, m[1] || m[2] || m[3]]));
+  const outside = loaded.filter(([, m]) => !m.startsWith('./') && !m.startsWith('../') && !builtin.has(m.replace(/^node:/, '')));
+  ok('the tool loads only modules of Node.js and its own files, as the README says', loaded.length > 0 && outside.length === 0
+    && readme.includes('the tool uses only the standard library of Node.js'), outside.map((x) => x.join(': ')).join(', '));
+  ok('the README gives the type and the status of the catalogue, in both languages, under the title; CITATION.cff says software',
+    readme.startsWith('# deposit-check\n\n種類：ソフトウェア　状態：改訂中\n\nType: Software · Status: In revision\n\n') && /^type: software$/m.test(cff));
+  const changes = [...read('CHANGELOG.md').matchAll(/^## (\d+\.\d+\.\d+) \((\d{4}-\d{2}-\d{2})\)$/gm)].map((m) => [m[1], m[2]]);
+  const relRows = [...readme.matchAll(/^\| (\d+\.\d+\.\d+) \| \[([^\]]+)\]\(https:\/\/doi\.org\/([^)]+)\) \| (\d{4}-\d{2}-\d{2}) \| \[([^\]]+)\]\(CHANGELOG\.md#([^)]+)\) \|$/gm)];
+  const cffVersions = [...cff.matchAll(/value: "([^"]+)"\n\s+description: "Version (\d+\.\d+\.\d+)"/g)].map((m) => [m[2], m[1]]);
+  const concept = /^\| Every version \| \[([^\]]+)\]\(https:\/\/doi\.org\/([^)]+)\) \| \| Resolves to the latest version \|$/m.exec(readme);
+  ok('the table of releases has a row for each version in CHANGELOG.md, with its date and the DOI that CITATION.cff gives, and the DOI of every version',
+    changes.length > 0 && relRows.length === changes.length
+    && relRows.every((m, i) => m[1] === changes[i][0] && m[4] === changes[i][1] && m[2] === m[3] && m[5] === m[1]
+      && m[6] === m[1].replace(/\./g, '') + '-' + m[4] && cffVersions.some(([v, d]) => v === m[1] && d === m[2]))
+    && concept !== null && concept[1] === concept[2] && cff.includes('doi: "' + concept[1] + '"'),
+    relRows.length + ' rows / ' + changes.length + ' versions');
+  const inputs = [...action.matchAll(/^  ([a-z-]+):\n    description:/gm)].map((m) => m[1]);
+  const options = new Set([...CLI.USAGE.matchAll(/^  --([a-z-]+)/gm)].map((m) => m[1]));
+  const listed = /^The inputs are (.+)\.$/m.exec(readme);
+  ok('each input of the action is an option of the command or the contact address, and the README lists them all',
+    inputs.length > 0 && inputs.every((i) => options.has(i === 'dois' ? 'doi' : i) || i === 'mailto')
+    && listed !== null && [...listed[1].matchAll(/`([a-z-]+)`/g)].map((m) => m[1]).sort().join() === inputs.slice().sort().join()
+    && inputs.every((i) => action.includes('${{ inputs.' + i + ' }}')), inputs.join(', '));
+  const bug = read('.github/ISSUE_TEMPLATE/bug_report.yml');
+  const required = [...bug.matchAll(/^  - type: (textarea|input)\n    id: ([a-z-]+)\n[\s\S]*?\n    validations:\n      required: (true|false)$/gm)].filter((m) => m[3] === 'true').map((m) => m[2]);
+  ok('the bug report form requires what happened, what was expected, the steps to reproduce, the version and the environment',
+    ['what', 'expected', 'steps', 'version', 'environment'].every((id) => required.includes(id)) && contributing.includes('.github/ISSUE_TEMPLATE/bug_report.yml'), required.join(', '));
 
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }

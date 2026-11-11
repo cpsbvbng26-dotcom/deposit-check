@@ -64,6 +64,16 @@ const RULES = [
     check: (r) => (!r.type.general || /^other$/i.test(r.type.general) ? ['type: ' + (r.type.general || '(none)') + (r.type.specific ? ' / ' + r.type.specific : '')] : []),
   },
   {
+    id: 'type-unexpected', scope: 'record', severity: 'warning',
+    title: 'The resource type differs from the type expected for the DOI',
+    fix: 'Change the resource type at the repository (on Zenodo, the Resource type of the record) to the one intended, or correct the type given with --expect-types. The type compared is DataCite’s resourceTypeGeneral, so only records registered by DataCite are compared.',
+    check: (r, ctx) => {
+      const want = expectedType(r, ctx);
+      if (!want || r.agency !== 'DataCite') return [];
+      return r.type.general.toLowerCase() === want.toLowerCase() ? [] : ['registered as ' + (r.type.general || '(none)') + ', expected ' + want];
+    },
+  },
+  {
     id: 'date-missing', scope: 'record', severity: 'warning',
     title: 'No full date of publication',
     fix: 'Give the date of publication with day, month and year. Only the year is in the metadata.',
@@ -159,6 +169,13 @@ function family(r) {
   const v = r.relations.find((x) => x.type === 'IsVersionOf' && /^10\./.test(x.id.replace(/^https?:\/\/(dx\.)?doi\.org\//, '')));
   if (v) return v.id.replace(/^https?:\/\/(dx\.)?doi\.org\//, '').toLowerCase();
   return r.doi;
+}
+
+/* The type expected for a record (ctx.expected: Map of lower-cased DOI → resourceTypeGeneral, from --expect-types).
+ * An expectation given for the record of all versions (Zenodo's concept DOI) holds for each of its versions. */
+function expectedType(r, ctx) {
+  if (!ctx || !ctx.expected) return null;
+  return ctx.expected.get(r.doi) || ctx.expected.get(family(r)) || null;
 }
 
 /* Of the versions of one work that were read, only the latest is checked: the others repeat it, and every finding

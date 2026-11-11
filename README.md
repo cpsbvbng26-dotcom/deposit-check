@@ -1,5 +1,9 @@
 # deposit-check
 
+種類：ソフトウェア　状態：改訂中
+
+Type: Software · Status: In revision
+
 deposit-check reads the DOI metadata of a researcher's works and says what is missing or inconsistent.
 Indexes such as OpenAlex and Google Scholar, ORCID's automatic updates and the readers of a repository read this metadata, not the PDF.
 A deposit with no abstract or licence in its metadata, or with the author's ORCID iD left off, is harder to find, to credit and to reuse.
@@ -14,9 +18,20 @@ Give it an ORCID iD, and it reads:
 Then it checks each work against the rules below, and writes a report in Markdown or JSON.
 It changes nothing anywhere: every request is a GET to a public API.
 
+```mermaid
+flowchart LR
+  orcid["an ORCID iD"] --> tool["deposit-check"]
+  dois["DOIs, and the resource type each should have"] --> tool
+  apis["ORCID, DataCite, Crossref, JaLC and OpenAlex (GET only)"] --> tool
+  tool --> report["a report in Markdown or JSON: each finding, its rule, and what to change at the repository"]
+  tool --> code["exit status: 0, 1 when a finding reaches --fail-on, 2 when it could not run"]
+```
+
+To try it in a minute, without the network, see [`examples/`](examples/).
+
 ## Use
 
-Node.js 22 or later. There are no dependencies to install.
+Node.js 22 or later. There are no dependencies to install: the tool uses only the standard library of Node.js, and `verification/check.js` checks that every module it loads is either part of Node.js or one of its own files.
 
 ```
 node bin/deposit-check.js --orcid 0000-0002-1825-0097
@@ -28,11 +43,13 @@ node bin/deposit-check.js --orcid 0000-0002-1825-0097 --format json --fail-on wa
 | --- | --- |
 | `--orcid <iD>` | Check the works of this ORCID iD. The iD may also be given as its URL. A wrong check digit is refused before any request. |
 | `--doi <DOI>` | Check this DOI as well. May be given more than once. |
+| `--expect-types <file>` | A JSON file of DOIs and the resource type each should have (see below). Each DOI in it is checked as well. |
 | `--format markdown\|json` | The report's format. Markdown by default. |
 | `--fail-on error\|warning\|info\|never` | Exit 1 when a finding is this serious or more. `error` by default. |
 | `--out <file>` | Write the report to a file as well. |
 | `--json-out <file>` | Also write the report as JSON to a file, whatever `--format` is. |
 | `--summary` | Also append the Markdown report to `$GITHUB_STEP_SUMMARY`. |
+| `--answers <file>` | Read the answers of the APIs from a JSON file instead of the network. For the example in `examples/`, and for trying the action. |
 
 The exit status is 0 when nothing reaches `--fail-on`, 1 when something does, and 2 when the tool could not run.
 
@@ -46,7 +63,9 @@ The exit status is 0 when nothing reaches `--fail-on`, 1 when something does, an
 ```
 
 The report is written to the job summary. Pin the action to a commit for a stable result.
-The inputs are `orcid`, `dois` (separated by spaces or commas), `fail-on` and `mailto`.
+The inputs are `orcid`, `dois` (separated by spaces or commas), `expect-types`, `fail-on`, `mailto` and `answers`.
+Each reaches the command through the environment, never through the command line itself.
+The repository's own CI uses the action on itself, on the example and without the network: the example passes, and fails once warnings count.
 
 ## Rules
 
@@ -59,6 +78,7 @@ The inputs are `orcid`, `dois` (separated by spaces or commas), `fail-on` and `m
 | `owner-orcid-missing` | error | Your ORCID iD is not on your name in the DOI metadata |
 | `creators-orcid-missing` | info | Some creators of a work with several creators have no ORCID iD in the DOI metadata |
 | `type-generic` | warning | The resource type is missing or says only “Other” |
+| `type-unexpected` | warning | The resource type differs from the type expected for the DOI |
 | `date-missing` | warning | No full date of publication |
 | `keywords-missing` | warning | No keywords |
 | `language-missing` | info | No language |
@@ -80,6 +100,21 @@ The versions of one work are read together:
 - Only the latest version that was read is checked. Older versions and the record of all versions repeat it, and every finding would come once for each.
 - A work counts as on the ORCID record when any of its versions is, and a work missing from it is reported once.
 - Zenodo ties versions with IsVersionOf to the record of all versions (its concept DOI). Figshare ties them by their DOIs (.v1, .v2 after the DOI of all versions).
+
+### Expected types
+
+A deposit can be registered under the wrong type: a program as a dataset, a preprint as a journal article. Nothing in the metadata says it is wrong, so `type-generic` cannot see it.
+Give the type each DOI should have in a JSON file, as DataCite's `resourceTypeGeneral`:
+
+```json
+{
+  "10.5281/zenodo.1234567": "Software",
+  "10.6084/m9.figshare.7654321": "Preprint"
+}
+```
+
+`--expect-types` reads it, checks each DOI in it, and raises `type-unexpected` where the registered `resourceTypeGeneral` differs. Case does not matter.
+A type given for the DOI of all versions (Zenodo's concept DOI) holds for each version. Only records registered by DataCite are compared, since Crossref and JaLC name their types in other words. Keys that start with `_` are comments.
 
 ## What is sent where
 
@@ -110,14 +145,21 @@ node verification/check.js
 ```
 
 The checks run without the network. The answers of the APIs come from made-up records in `verification/fixtures`.
+The checks break a complete record in 15 ways, one for each rule that reads a single record, and see that each break raises its rule and no other.
 They run on every push and pull request (`.github/workflows/check.yml`).
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
 For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
 
 ## Citing
 
-Version 0.1.0 is archived at Zenodo: [10.5281/zenodo.24033082](https://doi.org/10.5281/zenodo.24033082).
-The DOI [10.5281/zenodo.24033081](https://doi.org/10.5281/zenodo.24033081) stands for every version and resolves to the latest one.
+Each release is archived at Zenodo, with a DOI of its own:
+
+| Version | DOI | Released | Changes |
+| --- | --- | --- | --- |
+| 0.1.0 | [10.5281/zenodo.24033082](https://doi.org/10.5281/zenodo.24033082) | 2026-11-07 | [0.1.0](CHANGELOG.md#010-2026-11-07) |
+| Every version | [10.5281/zenodo.24033081](https://doi.org/10.5281/zenodo.24033081) | | Resolves to the latest version |
+
+The rows follow `CHANGELOG.md` and the identifiers in `CITATION.cff`, and `verification/check.js` checks that they agree.
 Cite the version you used. `CITATION.cff` gives the citation, and GitHub shows it as "Cite this repository".
 
 ## Contributing
@@ -150,6 +192,8 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - ORCID iD を一つ渡すと、ORCID の記録にある業績と、DataCite・Crossref でその iD を持つ業績を集めます。
 - 各 DOI の登録情報を DataCite・Crossref・JaLC から読み、上の表の規則で点検します。
 - 報告は Markdown か JSON で出します。
+- 稿ごとに意図した種類を JSON の表で渡すと、登録した種類（DataCite の `resourceTypeGeneral`）との食い違いを知らせます。
+- 依存はありません。Node.js の標準ライブラリだけで動きます。網に出ずに一分で試せる見本が `examples/` にあります。
 - どこにも何も書き込みません。送るのは ORCID iD と DOI だけで、鍵もアカウントも要りません。
 
 Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、最短で 2027-05-03 です。著者以外に使われた記録はまだありません。

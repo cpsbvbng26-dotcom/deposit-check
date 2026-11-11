@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- A rule, `type-unexpected`: the resource type registered at DataCite (`resourceTypeGeneral`) differs from the type expected for the DOI. The expected types are given in a JSON file with `--expect-types`, or the action's `expect-types` input; each DOI in the file is checked as well. A type given for the DOI of all versions holds for each version.
+- `--answers` reads the answers of the APIs from a JSON file instead of the network.
+- `examples/`: made-up deposits, their recorded answers and the report, to try the tool in a minute without the network. The checks run the example and compare the report.
+- The CI uses the action on the repository itself, on the example: it passes, and it fails once warnings count.
+- The README gives the type and status of the repository, a figure of what goes in and what comes out, a table of releases and their DOIs, and that only the standard library of Node.js is used. The checks compare each with the repository.
+- The checks break a complete record once for each rule that reads a single record, and the README gives their number.
+- A bug report form (`.github/ISSUE_TEMPLATE/bug_report.yml`) that asks for the steps to reproduce, the version and the environment.
+
 ## 0.1.0 (2026-11-07)
 
 - Released on GitHub and archived at Zenodo: version DOI 10.5281/zenodo.24033082, and 10.5281/zenodo.24033081 for every version. The README, in both languages, and `CITATION.cff` give both.
