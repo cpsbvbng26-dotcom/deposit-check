@@ -1,0 +1,50 @@
+name: Bug report
+description: A finding that is wrong, a finding that is missing, or a run that failed
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write in English or Japanese (日本語でも書けます). Issues are public: do not paste personal data.
+        A DOI that shows the problem helps most. The metadata of a DOI is public, so it can be named here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The finding that is wrong or missing, or the error. Paste the output as it is.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What was expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The command, or the inputs of the action, and the DOIs or the ORCID iD it was run on.
+      placeholder: |
+        node bin/deposit-check.js --doi 10.5281/zenodo.1234567
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version of deposit-check
+      description: The version in package.json, or the commit SHA the action was pinned to.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: The OS, the version of Node.js (`node --version`), and whether it ran as the GitHub Action.
+      placeholder: |
+        OS: Ubuntu 24.04
+        Node.js: 22.11.0
+        GitHub Action: no
+    validations:
+      required: true
