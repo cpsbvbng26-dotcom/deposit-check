@@ -13,3 +13,29 @@ jobs:
         with:
           node-version: 22
       - run: node verification/check.js
+
+  # action.yml, used on this repository itself, on the example and without the network.
+  # An action that looked at nothing would pass the first step too, so the second one must fail.
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: The example passes
+        uses: ./
+        with:
+          expect-types: examples/expected-types.json
+          answers: examples/answers.json
+      - name: The example fails once warnings count
+        id: warnings
+        continue-on-error: true
+        uses: ./
+        with:
+          expect-types: examples/expected-types.json
+          answers: examples/answers.json
+          fail-on: warning
+      - name: Check that it failed
+        if: steps.warnings.outcome != 'failure'
+        run: exit 1

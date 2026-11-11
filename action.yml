@@ -7,12 +7,18 @@ inputs:
   dois:
     description: DOIs to check as well, separated by spaces or commas.
     required: false
+  expect-types:
+    description: A JSON file of DOIs and the resource type (DataCite resourceTypeGeneral) each should have. Each DOI in it is checked as well.
+    required: false
   fail-on:
     description: error, warning, info or never. The step fails when a finding is this serious or more.
     required: false
     default: error
   mailto:
     description: A contact address that Crossref asks callers to give. Optional.
+    required: false
+  answers:
+    description: A JSON file of recorded answers of the APIs, read instead of the network. For the example in examples/ and for trying the action.
     required: false
 runs:
   using: composite
@@ -23,10 +29,14 @@ runs:
         args=(--fail-on "$FAIL_ON" --summary)
         if [ -n "$ORCID" ]; then args+=(--orcid "$ORCID"); fi
         if [ -n "$DOIS" ]; then args+=(--doi "$DOIS"); fi
+        if [ -n "$EXPECT_TYPES" ]; then args+=(--expect-types "$EXPECT_TYPES"); fi
+        if [ -n "$ANSWERS" ]; then args+=(--answers "$ANSWERS"); fi
         node "$GITHUB_ACTION_PATH/bin/deposit-check.js" "${args[@]}"
       env:
         ORCID: ${{ inputs.orcid }}
         DOIS: ${{ inputs.dois }}
+        EXPECT_TYPES: ${{ inputs.expect-types }}
+        ANSWERS: ${{ inputs.answers }}
         FAIL_ON: ${{ inputs.fail-on }}
         DEPOSIT_CHECK_MAILTO: ${{ inputs.mailto }}
 branding:
