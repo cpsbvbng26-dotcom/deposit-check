@@ -28,6 +28,7 @@ flowchart LR
 ```
 
 To try it in a minute, without the network, see [`examples/`](examples/).
+A run over the author's own works, with what it found, is kept in [`docs/runs/2026-11-11-catalog/`](docs/runs/2026-11-11-catalog/).
 
 ## Use
 
@@ -146,7 +147,8 @@ node verification/check.js
 
 The checks run without the network. The answers of the APIs come from made-up records in `verification/fixtures`.
 The checks break a complete record in 15 ways, one for each rule that reads a single record, and see that each break raises its rule and no other.
-They run on every push and pull request (`.github/workflows/check.yml`).
+They run on every push and pull request, and once a week (`.github/workflows/check.yml`).
+They also check the repository itself: no dependencies anywhere, workflows that only read except for the weekly issue, actions pinned to a commit, and no keys, tokens or e-mail addresses in any tracked file.
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
 For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
 
@@ -182,6 +184,10 @@ The code is under the MIT licence ([LICENSE](LICENSE)). The text of this README 
 The code, the checks and this README were written with Claude Code (Anthropic), a language model, at the author's request.
 The author decided the design and the rules, reviewed the output, and takes responsibility for it.
 Claude is not an author. Each commit records the use.
+
+| Tool | Used for | Checked by |
+| --- | --- | --- |
+| Claude Code (Anthropic) | The code, the checks, this README and `docs/` | The author (the design and the rules), and `verification/check.js` |
 
 ## 日本語
 

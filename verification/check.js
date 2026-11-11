@@ -208,8 +208,10 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     && /ORCID: \$\{\{ inputs\.orcid \}\}/.test(action) && /using: composite/.test(action));
   const wfFiles = fs.readdirSync(path.join(ROOT, '.github', 'workflows'));
   const wf = (f) => read(path.join('.github', 'workflows', f));
-  ok('every workflow only reads, except that the weekly run may write issues; inputs go through the environment',
-    wfFiles.length >= 2 && wfFiles.every((f) => (f === 'run.yml' ? /permissions:\n  contents: read\n  issues: write\n(?!  \w)/ : /permissions:\n  contents: read\n(?!  \w)/).test(wf(f)) && onlyInEnv(wf(f))));
+  /* The top level only reads. The weekly run writes its issue from its one job, and nowhere else. */
+  ok('every workflow only reads, except that the job of the weekly run may write issues; inputs go through the environment',
+    wfFiles.length >= 2 && wfFiles.every((f) => /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f))
+      && (f !== 'run.yml' || /^    permissions:\n      contents: read\n      issues: write\n(?!      \w)/m.test(wf(f))) && onlyInEnv(wf(f))));
   const cff = read('CITATION.cff');
   ok('CITATION.cff names one author with an ORCID iD, and no language model', (cff.match(/family-names:/g) || []).length === 1 && cff.includes('orcid: "https://orcid.org/0009-0000-1406-0547"') && !/claude|anthropic|openai|gpt/i.test(cff));
   /* Zenodo reads .zenodo.json before CITATION.cff, so the disclosure has to be in it too. */
@@ -404,6 +406,41 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const required = [...bug.matchAll(/^  - type: (textarea|input)\n    id: ([a-z-]+)\n[\s\S]*?\n    validations:\n      required: (true|false)$/gm)].filter((m) => m[3] === 'true').map((m) => m[2]);
   ok('the bug report form requires what happened, what was expected, the steps to reproduce, the version and the environment',
     ['what', 'expected', 'steps', 'version', 'environment'].every((id) => required.includes(id)) && contributing.includes('.github/ISSUE_TEMPLATE/bug_report.yml'), required.join(', '));
+
+  /* ------------------------------------------------------------ 14 */
+  console.log('\n14. Dependencies, workflows and secrets');
+  const manifest = JSON.parse(read('package.json'));
+  ok('package.json declares no dependencies of any kind',
+    ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'].every((k) => !manifest[k] || Object.keys(manifest[k]).length === 0));
+  const tracked = require('child_process').execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' }).split('\0').filter((f) => f && fs.existsSync(path.join(ROOT, f)));
+  const workflows = tracked.filter((f) => /^\.github\/workflows\/.+\.ya?ml$/.test(f));
+  const installs = workflows.concat(['action.yml']).flatMap((f) => [...read(f).matchAll(/\b(?:npm|pip3?)\s+install\b[^\n]*/g)].map((m) => f + ': ' + m[0]));
+  ok('no workflow and no action installs a package', installs.length === 0, installs.join(', '));
+  const noTop = workflows.filter((f) => !/^permissions:/m.test(read(f)));
+  ok('every workflow sets permissions at the top level', workflows.length > 0 && noTop.length === 0, noTop.join(', '));
+  /* The only write is the weekly issue, in run.yml. Any other write fails here. */
+  const writes = workflows.flatMap((f) => [...read(f).matchAll(/^\s+([a-z-]+):\s*write\b/gm)].map((m) => path.basename(f) + ':' + m[1]));
+  ok('the only write permission is issues: write, given to the job in run.yml', writes.join() === 'run.yml:issues'
+    && /^permissions:\n  contents: read\n/m.test(read('.github/workflows/run.yml')), writes.join(', '));
+  const uses = workflows.concat(['action.yml']).flatMap((f) => [...read(f).matchAll(/^\s*(?:-\s+)?uses:\s*(\S+)(.*)$/gm)].map((m) => [f, m[1], m[2]])).filter(([, u]) => !u.startsWith('./'));
+  const loose = uses.filter(([, u, rest]) => !/^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/.test(u) || !/^\s+#\s*\S+/.test(rest));
+  ok('every action from outside is pinned to a full commit SHA, with its tag in a comment (' + uses.length + ')', uses.length > 0 && loose.length === 0, loose.map((x) => x[0] + ' ' + x[1]).join(', '));
+  ok('the checks also run once a week', /^\s+schedule:\s*\n\s+- cron:/m.test(read('.github/workflows/check.yml')) && read('.github/workflows/check.yml').includes('node verification/check.js'));
+  /* The shapes are cut in two, so that this file does not match itself. */
+  const SECRET = [new RegExp('-----BEGIN ' + '[A-Z ]*PRIVATE KEY' + '-----'), new RegExp('\\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github' + '_pat_[A-Za-z0-9_]{22,})'),
+    new RegExp('\\bAKI' + 'A[0-9A-Z]{16}\\b'), new RegExp('\\bxox' + '[abprs]-[A-Za-z0-9-]{10,}'), new RegExp('\\bAIz' + 'a[0-9A-Za-z_-]{35}\\b'), new RegExp('\\bsk-(?:an' + 't-)?[A-Za-z0-9_-]{32,}')];
+  const MAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
+  const ALLOWED = new Set(['noreply@anthropic.com', 'you@example.com']);
+  const secrets = [], mails = [];
+  for (const f of tracked) {
+    const buf = fs.readFileSync(path.join(ROOT, f));
+    if (buf.subarray(0, 8192).includes(0)) continue;
+    const text = buf.toString('utf8');
+    if (SECRET.some((re) => re.test(text))) secrets.push(f);
+    for (const m of text.match(MAIL) || []) if (!ALLOWED.has(m) && !m.endsWith('@users.noreply.github.com')) mails.push(f + ' ' + m);
+  }
+  ok('no tracked file holds a private key or a token (' + tracked.length + ' files)', secrets.length === 0, secrets.join(', '));
+  ok('no tracked file holds an e-mail address other than the allowed ones', mails.length === 0, mails.slice(0, 10).join(', '));
 
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
