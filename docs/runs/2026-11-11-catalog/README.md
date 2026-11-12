@@ -2,8 +2,8 @@
 
 deposit-check was run over every DOI in the catalogue of the author's works, on 2026-11-11.
 The catalogue is `catalog.json` in cpsbvbng26-dotcom, at commit `804cffb` of its `main`.
-This page lists what the run found, for the author to fix at each repository.
-Nothing here has been fixed yet: deposit-check reads metadata and changes nothing, and the records on Zenodo, figshare, OSF, SSRN and ORCID are edited by the author alone.
+This page lists what the run found at each repository.
+Nothing here has been fixed: deposit-check reads metadata and changes nothing, and the records on Zenodo, figshare, OSF, SSRN and ORCID are edited only from the author's accounts, which the sessions that write this repository cannot reach.
 
 ## How it was run
 
@@ -23,27 +23,27 @@ The run was made from a session that could reach DataCite, Crossref, ORCID and O
 
 ### Errors
 
-| DOI | Work | Rule | What to change |
+| DOI | Work | Rule | What is missing |
 | --- | --- | --- | --- |
-| [10.5281/zenodo.22055709](https://doi.org/10.5281/zenodo.22055709) | A Naval Gazette Entry for Lieutenant Otani Tsune | `abstract-missing` | Add the abstract as a description of the type Abstract on Zenodo |
+| [10.5281/zenodo.22055709](https://doi.org/10.5281/zenodo.22055709) | A Naval Gazette Entry for Lieutenant Otani Tsune | `abstract-missing` | No description of the type Abstract on Zenodo |
 | [10.5281/zenodo.22057583](https://doi.org/10.5281/zenodo.22057583) | Manifesto of Imperial Selfhood | `abstract-missing` | The same |
 | [10.5281/zenodo.22058254](https://doi.org/10.5281/zenodo.22058254) | The Nobility and Exemplarity of the Celibate Individual | `abstract-missing` | The same |
 | [10.5281/zenodo.22058777](https://doi.org/10.5281/zenodo.22058777) | The Trinity-Infinity Framework, Series II | `abstract-missing` | The same |
 | [10.5281/zenodo.22058964](https://doi.org/10.5281/zenodo.22058964) | The Trinity-Infinity Framework, Series III | `abstract-missing` | The same |
 | [10.5281/zenodo.22064241](https://doi.org/10.5281/zenodo.22064241) | Fragmentarian Spiritual Individualism | `abstract-missing` | The same |
 | [10.5281/zenodo.23114131](https://doi.org/10.5281/zenodo.23114131) | 「30歳魔法使い」都市伝説の構造分析 | `abstract-missing` | The same |
-| [10.17605/osf.io/mq7za](https://doi.org/10.17605/osf.io/mq7za) | Sophaxis: An Independent Overlay Preprint Server (OSF; not in the catalogue) | `licence-missing` | Choose a licence on OSF |
+| [10.17605/osf.io/mq7za](https://doi.org/10.17605/osf.io/mq7za) | Sophaxis: An Independent Overlay Preprint Server (OSF; not in the catalogue) | `licence-missing` | No licence on the OSF record |
 
 The papers carry their abstracts in the PDF. The metadata, which indexes read, does not.
 
 ### Warnings
 
-| Rule | DOIs | What to change |
+| Rule | DOIs | What is missing |
 | --- | --- | --- |
-| `keywords-missing` | Zenodo: 22055709, 22057583, 22058254, 22058624, 22058777, 22058964, 22064241, 23114131. figshare: 34419198. SSRN: 7358779, 7358818, 7446961, 7449338, 7537983. OSF: mq7za | Add keywords (subjects). The terms in cpsbvbng26-dotcom's `docs/keywords.json` keep them the same across works |
-| `abstract-short` | 10.5281/zenodo.24033082 (deposit-check 0.1.0) | The description is a one-line summary. Give the abstract of `paper/paper.md` |
-| `openalex-abstract-missing` | 10.5281/zenodo.24033082, and SSRN 7358779, 7358818, 7446961, 7449338, 7537983 | Wait for OpenAlex to read the metadata again. Report it to OpenAlex if it still has none after some weeks |
-| `not-on-orcid` | Every work in the catalogue except the SSRN copies already on the record (7358779, 7358818, 7449338, 7537983); and OSF mq7za | Add the works on ORCID: Works, Add works, Search & link, DataCite. Or turn on DataCite's auto-update |
+| `keywords-missing` | Zenodo: 22055709, 22057583, 22058254, 22058624, 22058777, 22058964, 22064241, 23114131. figshare: 34419198. SSRN: 7358779, 7358818, 7446961, 7449338, 7537983. OSF: mq7za | No keywords (subjects). The terms in cpsbvbng26-dotcom's `docs/keywords.json` are the ones that keep them the same across works |
+| `abstract-short` | 10.5281/zenodo.24033082 (deposit-check 0.1.0) | The description is a one-line summary, not the abstract of `paper/paper.md` |
+| `openalex-abstract-missing` | 10.5281/zenodo.24033082, and SSRN 7358779, 7358818, 7446961, 7449338, 7537983 | OpenAlex has no abstract. It reads one from the metadata when it next updates the work, and only where the metadata has one |
+| `not-on-orcid` | Every work in the catalogue except the SSRN copies already on the record (7358779, 7358818, 7449338, 7537983); and OSF mq7za | The works are not on the ORCID record |
 
 ### Notes
 
@@ -56,7 +56,7 @@ The papers carry their abstracts in the PDF. The metadata, which indexes read, d
 ## Title, creator and date, compared with the catalogue
 
 The rules do not compare a record with the catalogue. These were compared by reading the same metadata (DataCite and Crossref, 2026-11-11) against `catalog.json`.
-Which side is right is for the author to decide. Where the registry is wrong, the record is edited there; where the catalogue is wrong, it is edited in researcher-profile.
+Decided by Claude on 2026-11-12: the catalogue entries in the table below are not changed to match the registries. The catalogue is the source the site is built from, and some registry titles are the ones in error, such as the Kangxi radicals in the SSRN title below. A difference stays listed here until the registry record changes; the registry records cannot be edited from here.
 
 | DOI | Field | Registry | Catalogue |
 | --- | --- | --- | --- |
@@ -79,8 +79,7 @@ These identifiers came up, and the catalogue does not give them:
 - 10.17605/osf.io/mq7za, the OSF record of Sophaxis, which carries the author's iD;
 - 10.5281/zenodo.24033081, the DOI of all versions of deposit-check, which this repository's README gives and the catalogue leaves empty.
 
-## What is the author's to do
+## What cannot be fixed from here
 
-Every fix above is made on a service this repository cannot write to.
-Zenodo lets the author edit the metadata of a published record without a new version. SSRN titles and licences are changed from the SSRN author page. The ORCID record is changed on ORCID.
-After the fixes, running the same command again shows what is left.
+Every finding above is on a service this repository cannot write to: Zenodo, figshare, OSF, SSRN and ORCID are edited only from the author's accounts.
+None of them has been fixed. Running the same command again shows what is left.
