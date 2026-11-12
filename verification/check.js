@@ -303,6 +303,20 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('the number of rules in the paper is the number of rules (' + R.RULES.length + ')', body.includes('applies ' + W[R.RULES.length] + ' rules'));
   ok('no DOI in paper.bib until one is checked at its source', !/\bdoi\s*=/i.test(bib));
   ok('the paper says the research impact as it is: no use by other authors yet', body.includes('There is no record yet of use by other authors.'));
+  /* 2026-11-12 (the third missed findings): the one affiliation is the university where the author is enrolled, as JOSS's
+   * guide to the paper asks for the authors and their affiliations, with no title; the body says in one sentence that the
+   * tool is not a project of the university and that the university does not endorse it. Broken copies must fail. */
+  const AFFIL = 'affiliations:\n  - name: ZEN University, Japan\n    index: 1\n';
+  const NOT_UNIV = 'deposit-check is not a project of ZEN University, and the university does not endorse it.';
+  const affilOk = (t) => {
+    const head = /^---\n([\s\S]*?)\n---\n/.exec(t);
+    const b = head ? t.slice(head[0].length).replace(/<!--[\s\S]*?-->/g, '') : '';
+    return !!head && t.includes(AFFIL) && (head[1].match(/^  - name:/gm) || []).length === 2 && b.replace(/\s+/g, ' ').includes(NOT_UNIV);
+  };
+  const affilBreaks = [pmd.replace('deposit-check is not a project', 'deposit-check is a project'), pmd.replace('the university does not endorse it.', 'the university endorses it.'),
+    pmd.replace('  - name: ZEN University, Japan\n', '  - name: ZEN University, Japan\n    index: 1\n  - name: Independent\n'), pmd.replace(AFFIL, '')];
+  ok('the one affiliation is ZEN University, Japan, and the body says that deposit-check is not a project of the university and is not endorsed by it; broken copies fail',
+    affilOk(pmd) && affilBreaks.every((b) => b !== pmd && !affilOk(b)));
 
   }
 

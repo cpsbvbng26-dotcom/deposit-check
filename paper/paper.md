@@ -72,5 +72,6 @@ The repository history records the use in each commit.
 # Acknowledgements
 
 deposit-check depends on the open APIs of ORCID, DataCite, Crossref, JaLC and OpenAlex.
+deposit-check is not a project of ZEN University, and the university does not endorse it.
 
 # References
