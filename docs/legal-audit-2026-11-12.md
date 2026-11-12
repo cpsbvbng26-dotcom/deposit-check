@@ -23,10 +23,24 @@ Findings are one of: Error, Insufficient basis, Omission, Wording, No problem.
 | Examples and fixtures | 個人情報保護法第2条 (APPI, Art. 2) | Information that identifies a specific living individual | The records are made up: DataCite's test prefix 10.5072 and ORCID's fictitious researcher Josiah Carberry. The one Japanese name is a placeholder | No problem | None |
 | Terms of the APIs the tool calls | none | The terms of DataCite, Crossref, ORCID, OpenAlex and JaLC for their public APIs | They were not considered before, and were not fetched in this audit | Omission | Recorded here. The tool sends a descriptive User-Agent and reads only public records |
 
+## 2026-11-12 の続き：リスクを締めた
+
+On the same day, the owner asked for the legal risk to be tightened further (「法的リスクをさらにシメて」).
+The places that rest on an uncertain reading were read again under the stricter reading.
+Where an option holds under the stricter reading and costs nothing, it was taken.
+Places that rest on a text that could not be fetched are not handled in this section.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| docs/runs/2026-11-11-catalog | 個人情報保護法第2条 (APPI, Art. 2), 個人情報保護法第27条 (Art. 27) | Personal information is information about a living individual. A business handling personal information does not pass personal data to a third party without consent | The report holds the metadata of the author's own works only. No other person's name or contact is in it | No problem | None |
+| README promises about the tool's results | 民法第709条 (Civil Code, Art. 709) | A person who infringes another's rights or legally protected interests by intent or negligence compensates the loss | The README describes what the rules check and does not promise that the registries are complete or that every gap is found. The MIT License disclaims warranties | No problem | Kept. Claude decided this on 2026-11-12 (2026-11-12 に Claude が決めました), because the text already describes and does not promise |
+| Crossref contact address | 個人情報保護法第2条 (APPI, Art. 2) | Information that identifies a specific living individual | No address is built in. It comes only from `DEPOSIT_CHECK_MAILTO` that the user sets | No problem | None |
+
 ## Laws checked
 
 - 著作権法 (Copyright Act: Art. 2, 21)
-- 個人情報保護法 (Act on the Protection of Personal Information: Art. 2, 16)
+- 個人情報保護法 (Act on the Protection of Personal Information: Art. 2, 16, 27)
+- 民法 (Civil Code: Art. 709)
 - CC BY 4.0 legal code (Section 3); Zenodo Terms of Use
 
 ## Texts that could not be fetched
