@@ -1,5 +1,9 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: >-
+  If you use this software, please cite it as below.
+  The code is MIT (LICENSE); the README and the other documents are CC BY 4.0.
+  The licence field of this record covers the code only.
+  Texts by others that this repository quotes, or keeps to verify its quotations, are not licensed under CC BY 4.0 or the MIT License and remain their owners'.
 type: software
 title: "deposit-check: checking the DOI metadata of a researcher's deposits against their ORCID record"
 authors:
