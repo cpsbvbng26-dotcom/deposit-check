@@ -197,7 +197,7 @@ There is no record yet of use by anyone but the author. Whether the tool is with
 
 ## Licence
 
-The code is under the MIT licence ([LICENSE](LICENSE)). The text of this README and the other documents is under CC BY 4.0.
+The code is under the MIT licence ([LICENSE](LICENSE)). The text of this README and the other documents is under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Reuse of the text needs the attribution that Section 3 of that licence asks for: the author, a link to the licence, and whether the text was changed. The legal audit of 2026-11-12 found that this sentence named the licence without a link to it, while LICENSE, CITATION.cff and .zenodo.json name only the MIT licence; the link is now given. The split itself is unchanged.
 
 ## Use of language models
 
