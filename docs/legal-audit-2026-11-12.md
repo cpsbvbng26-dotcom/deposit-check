@@ -36,17 +36,34 @@ Places that rest on a text that could not be fetched are not handled in this sec
 | README promises about the tool's results | 民法第709条 (Civil Code, Art. 709) | A person who infringes another's rights or legally protected interests by intent or negligence compensates the loss | The README describes what the rules check and does not promise that the registries are complete or that every gap is found. The MIT License disclaims warranties | No problem | Kept. Claude decided this on 2026-11-12 (2026-11-12 に Claude が決めました), because the text already describes and does not promise |
 | Crossref contact address | 個人情報保護法第2条 (APPI, Art. 2) | Information that identifies a specific living individual | No address is built in. It comes only from `DEPOSIT_CHECK_MAILTO` that the user sets | No problem | None |
 
+## 2026-11-12 の続き：取り寄せた周辺の文
+
+Some texts listed above as not fetched were fetched on the same day by Sophaxis's fetch workflow.
+They are in `verification/sources-raw.json` on Sophaxis's main (commit 6b40d77, PR #218).
+Each conclusion was checked again against them.
+Terms of use are works, so only the phrases relied on are quoted here.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| Calls to ORCID | ORCID Public APIs Terms of Service | The Public APIs may be used only for non-commercial use: no re-use fees and no use "in connection with any revenue-generating product or service". ORCID may rate-limit | The tool is free under the MIT License, charges nothing and is not part of a product that earns revenue. It reads public records only | No problem | None |
+| Calls to OpenAlex | OpenAlex licence page and rate-limit page | OpenAlex data is under CC0 ("free to use in any way you like"). Free use has a daily credit budget and at most 100 requests per second | The tool reads one record at a time and pauses between requests (`src/fetch.js`) | No problem | None |
+| Calls to DataCite | DataCite Terms and Conditions, DataCite API documentation | The terms cover the material on the DataCite website. The API documentation lists a question on rate limits | The tool reads DOI metadata through the public REST API and does not copy the website | No problem | None |
+| Calls to Crossref | Crossref REST API documentation | The page describes the public REST API. The page on the licence of the metadata returned 404 | The tool reads metadata of the works it is given. No contact address is built in | Insufficient basis | Kept. Claude decided this on 2026-11-12 (2026-11-12 に Claude が決めました), because the tool reads only the records it is asked about and quotes nothing beyond the fields it reports |
+| Calls to JaLC | JaLC pages (top, metadata, FAQ) | The fetched pages describe membership and DOI registration. No terms for the public API were found on them | The tool reads public metadata only | Insufficient basis | Kept. The API terms are listed as not fetched below |
+| paper/ and JOSS | JOSS policies and paper page | Authors of JOSS papers retain copyright, and papers are under CC BY 4.0 ("papers retain copyright") | The repository's text is under CC BY 4.0 and the author keeps the copyright | No problem | None |
+
 ## Laws checked
 
 - 著作権法 (Copyright Act: Art. 2, 21)
 - 個人情報保護法 (Act on the Protection of Personal Information: Art. 2, 16, 27)
 - 民法 (Civil Code: Art. 709)
 - CC BY 4.0 legal code (Section 3); Zenodo Terms of Use
+- Terms of ORCID (Public APIs), DataCite and the documentation of the DataCite, Crossref and OpenAlex APIs; JaLC pages; JOSS policies
 
 ## Texts that could not be fetched
 
-- The terms of use of the public APIs of DataCite, Crossref, ORCID, OpenAlex and JaLC were not fetched.
-- The JOSS policy on the licence of published papers was not fetched.
+- The terms of use of JaLC's public API were not found on the fetched JaLC pages.
+- Crossref's page on the licence of REST API metadata returned 404.
 
 ## Lawyer
 
