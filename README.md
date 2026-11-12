@@ -166,8 +166,8 @@ node verification/check.js
 The checks run without the network. The answers of the APIs come from made-up records in `verification/fixtures`.
 The checks break a complete record in 16 ways, one for each rule that reads a single record, and see that each break raises its rule and no other.
 They run on every push and pull request, and once a week (`.github/workflows/check.yml`).
-They also check the repository itself: no dependencies anywhere, workflows that only read except for the weekly issue, actions pinned to a commit, and no keys, tokens or e-mail addresses in any tracked file.
-`.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary and to an artifact of the run.
+They also check the repository itself: no dependencies anywhere, workflows that only read except for the issue of the monthly run, actions pinned to a commit, and no keys, tokens or e-mail addresses in any tracked file.
+`.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a month, and writes the report to the job summary and to an artifact of the run.
 For the author's own iD it also reads every DOI in the catalogue of the author’s works (`catalog.json` in cpsbvbng26-dotcom, read from GitHub), with the type and the copies elsewhere that the catalogue gives each work (`scripts/catalog-inputs.js`).
 It keeps one open issue with the latest report, and the findings of that report. When the findings change, it comments with the ones that are gone and the ones that are new. The issue closes itself when no error or warning is left.
 The run commits nothing. Only this run talks to api.github.com, with the token GitHub gives the run, and it may write issues and nothing else.
@@ -223,7 +223,7 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - 報告は Markdown か JSON で出します。
 - 稿ごとに意図した種類を JSON の表で渡すと、登録した種類（DataCite の `resourceTypeGeneral`）との食い違いを知らせます。
 - 同じ本文の写し（SSRN など）を JSON の表で渡すと、IsIdenticalTo で結ばれていない組を知らせます。片方の記録が相手を指していれば足ります。
-- 毎週の実行は、著者の業績の目録（cpsbvbng26-dotcom の `catalog.json`）にあるすべての DOI も読みます。前の報告から指摘が変わると、消えた指摘と新しい指摘を issue に書きます。リポジトリには何もコミットしません。
+- 月に一度の実行は、著者の業績の目録（cpsbvbng26-dotcom の `catalog.json`）にあるすべての DOI も読みます。前の報告から指摘が変わると、消えた指摘と新しい指摘を issue に書きます。リポジトリには何もコミットしません。
 - 依存はありません。Node.js の標準ライブラリだけで動きます。網に出ずに一分で試せる見本が `examples/` にあります。
 - どこにも何も書き込みません。送るのは ORCID iD と DOI だけで、鍵もアカウントも要りません。
 
