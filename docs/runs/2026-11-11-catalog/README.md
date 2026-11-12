@@ -56,7 +56,7 @@ The papers carry their abstracts in the PDF. The metadata, which indexes read, d
 ## Title, creator and date, compared with the catalogue
 
 The rules do not compare a record with the catalogue. These were compared by reading the same metadata (DataCite and Crossref, 2026-11-11) against `catalog.json`.
-Decided on 2026-11-12: the catalogue entries in the table below are not changed to match the registries. The catalogue is the source the site is built from, and some registry titles are the ones in error, such as the Kangxi radicals in the SSRN title below. A difference stays listed here until the registry record changes; the registry records cannot be edited from here.
+Decided by Claude on 2026-11-12: the catalogue entries in the table below are not changed to match the registries. The catalogue is the source the site is built from, and some registry titles are the ones in error, such as the Kangxi radicals in the SSRN title below. A difference stays listed here until the registry record changes; the registry records cannot be edited from here.
 
 | DOI | Field | Registry | Catalogue |
 | --- | --- | --- | --- |
