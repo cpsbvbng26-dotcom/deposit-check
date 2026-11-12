@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A rule, `identical-unlinked`: a copy of the same text elsewhere (an SSRN copy of a Zenodo paper, for example) that neither record links with IsIdenticalTo. The copies are given in a JSON file with `--expect-identical`, or the action's `expect-identical` input; each DOI in the file is checked as well. One side of the link is enough, and copies given for one version hold for the version that is checked.
+- The weekly run also reads every DOI in the catalogue of the author's works (`catalog.json` in cpsbvbng26-dotcom, read from GitHub), with the types and the copies the catalogue gives (`scripts/catalog-inputs.js`). The report is kept as an artifact of the run.
+- The weekly issue keeps the findings of the last report. When they change, a comment names the findings that are gone and the ones that are new; before, it compared the counts only.
+- The workflows check out without leaving credentials behind, and the checks see that no workflow commits or pushes.
 - A rule, `type-unexpected`: the resource type registered at DataCite (`resourceTypeGeneral`) differs from the type expected for the DOI. The expected types are given in a JSON file with `--expect-types`, or the action's `expect-types` input; each DOI in the file is checked as well. A type given for the DOI of all versions holds for each version.
 - `--answers` reads the answers of the APIs from a JSON file instead of the network.
 - `examples/`: made-up deposits, their recorded answers and the report, to try the tool in a minute without the network. The checks run the example and compare the report.

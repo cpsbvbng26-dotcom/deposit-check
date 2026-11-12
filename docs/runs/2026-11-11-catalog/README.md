@@ -49,6 +49,7 @@ The papers carry their abstracts in the PDF. The metadata, which indexes read, d
 
 - `language-missing`: no language in the metadata of most records (see the report). Zenodo has a language field; it applies to the next version or to an edit of the record.
 - `relations-none`: the SSRN copies and the OSF record link to nothing. The Zenodo records can link to the SSRN copies (for example IsIdenticalTo), as the catalogue already pairs them.
+  - Added on 2026-11-12: the Zenodo side was already done. DataCite, read on 2026-11-12, gives each of the Zenodo records 22058254, 22057583, 22058777 and 22055709 an IsIdenticalTo to its SSRN copy, and the records were last updated before this run. An SSRN record cannot carry the link, so `relations-none` on the copies stays. The rule `identical-unlinked` now checks these pairs, from the catalogue's other DOIs.
 - `type-unexpected` did not fire: every DataCite record has the type the catalogue gives it.
 - `owner-orcid-missing` did not fire: every record carries the author's ORCID iD.
 
