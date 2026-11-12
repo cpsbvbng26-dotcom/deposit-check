@@ -199,6 +199,8 @@ There is no record yet of use by anyone but the author. Whether the tool is with
 
 The code is under the MIT licence ([LICENSE](LICENSE)). The text of this README and the other documents is under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Reuse of the text needs the attribution that Section 3 of that licence asks for: the author, a link to the licence, and whether the text was changed. The legal audit of 2026-11-12 found that this sentence named the licence without a link to it, while LICENSE, CITATION.cff and .zenodo.json name only the MIT licence; the link is now given. The split itself is unchanged.
 
+Texts by others that this repository quotes, or keeps to verify its quotations, are not licensed under CC BY 4.0 or the MIT License and remain their owners'.
+
 ## Use of language models
 
 The code, the checks and this README were written with Claude Code (Anthropic), a language model, at the author's request.
@@ -217,6 +219,7 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 
 - ORCID iD を一つ渡すと、ORCID の記録にある業績と、DataCite・Crossref でその iD を持つ業績を集めます。
 - 各 DOI の登録情報を DataCite・Crossref・JaLC から読み、上の表の規則で点検します。
+- OpenAlex が各業績を持っているか、要旨を持っているかも読みます。
 - 報告は Markdown か JSON で出します。
 - 稿ごとに意図した種類を JSON の表で渡すと、登録した種類（DataCite の `resourceTypeGeneral`）との食い違いを知らせます。
 - 同じ本文の写し（SSRN など）を JSON の表で渡すと、IsIdenticalTo で結ばれていない組を知らせます。片方の記録が相手を指していれば足ります。
@@ -231,6 +234,7 @@ Journal of Open Source Software（JOSS）への投稿を計画しています。
 引用するときは、使った版の DOI を挙げます。
 
 コードは MIT、文書は CC BY 4.0 です。
+このリポジトリが引き、または引用を確かめるために置いている他人の文は、CC BY 4.0 でも MIT でも許諾しておらず、それぞれの権利者のものです。
 コードと検査と文書は、言語モデル Claude Code（Anthropic）を使って書きました。設計と規則は著者が決め、出力を確かめ、責任を負います。Claude は著者ではありません。
 
 © 2026 Takuya Nemoto ([ORCID 0009-0000-1406-0547](https://orcid.org/0009-0000-1406-0547))
