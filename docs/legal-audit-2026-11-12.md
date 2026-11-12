@@ -103,6 +103,27 @@ Findings in this table: Omission 3, No problem 2.
 
 No lawyer has reviewed this section.
 
+## 2026-11-12 の続き：十度目の見落とし
+
+A tenth read-only pass was made by a different hand. It found what the sections above had missed.
+The changes were made on 2026-11-13, Japan time. The earlier rows are a record of what was checked at the time, so they are kept.
+The citation metadata of this repository described what the tool reads in an older form.
+The description in `.zenodo.json` named DataCite, Crossref and JaLC, and not OpenAlex; the description in `package.json` did the same.
+`src/fetch.js` also asks api.openalex.org about each DOI, and pub.orcid.org for the works on the record.
+The description in `.zenodo.json` and both languages of the README said that only the ORCID iD and the DOIs are sent.
+When a contact address is given in `DEPOSIT_CHECK_MAILTO` (or the action's `mailto` input), `src/fetch.js` adds it to the User-Agent of every request.
+The DataCite record of version 0.1.0 (https://api.datacite.org/dois/10.5281/zenodo.24033082, read on 2026-11-13 at 8:06 Japan time; SHA-256 of the whole response `fbf68c94a306705b8e431447a355447b7c1eb52477bd5e66148b342f09955ac9`) has the abstract “No description provided.”, so the frozen record does not carry the older sentence.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| `.zenodo.json` description and `package.json` description: what the tool reads | none (accuracy) | The list of services the tool calls is complete wherever it is given | Both named DataCite, Crossref and JaLC only. The row “README, Japanese section: what the tool reads” in the section on the fourth pass above made the README complete, but did not look at these two files | Wording | Both now name the public APIs of ORCID, DataCite, Crossref, JaLC and OpenAlex. `check_ecosystem.js` (12l) in cpsbvbng26-dotcom now reads both files and compares the names with the hosts in `src/fetch.js`. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that the list is checked against the code in every place it is given. |
+| `.zenodo.json` description and the README (English and Japanese): what the tool sends | none (accuracy) | What the tool sends is stated as the code sends it | They said that only the ORCID iD and the DOIs are sent. A contact address, when one is given, goes in the User-Agent of every request | Wording | They now say that the ORCID iD and the DOIs are sent, and a contact address only when one is given. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that the sentence holds for every way the tool can be run. |
+| `.zenodo.json` notes and `CITATION.cff` message: the licence field | 著作権法第21条 (Copyright Act, Art. 21) | What the licence field covers matches the value of the field | Both say the field covers the code only; both fields are MIT | No problem | Kept. `check_ecosystem.js` (12l) in cpsbvbng26-dotcom now compares the sentence with the value of the field. |
+
+Findings in this table: Wording 2, No problem 1.
+
+No lawyer has reviewed this section.
+
 ## Laws checked
 
 - GitHub Terms of Service (section I) and GitHub Additional Product Terms (section on Actions), fetched from `github/site-policy` on 2026-11-13
