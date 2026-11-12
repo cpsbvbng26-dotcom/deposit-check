@@ -1,6 +1,6 @@
 {
   "title": "deposit-check: checking the DOI metadata of a researcher's deposits against their ORCID record",
-  "description": "<p>deposit-check reads the DOI metadata of a researcher's works, from DataCite, Crossref and JaLC, and says what is missing or inconsistent against the researcher's ORCID record: abstracts, licences, ORCID iDs on the author's name, the links between versions, and works missing from the ORCID record. It writes nothing anywhere and needs no key or account; it sends only the ORCID iD and the DOIs.</p>",
+  "description": "<p>deposit-check reads the public APIs of ORCID, DataCite, Crossref, JaLC and OpenAlex, and says what is missing or inconsistent in the DOI metadata of a researcher's works against the researcher's ORCID record: abstracts, licences, ORCID iDs on the author's name, the links between versions, works missing from the ORCID record, and whether OpenAlex holds each work and its abstract. It writes nothing anywhere and needs no key or account; it sends the ORCID iD and the DOIs, and a contact address only when the user gives one.</p>",
   "upload_type": "software",
   "license": "mit",
   "access_right": "open",
