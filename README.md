@@ -137,7 +137,7 @@ The key is the record that should carry the link. Copies given for one version h
 
 ## What is sent where
 
-The ORCID iD and the DOIs are sent, and nothing else. No key or account is needed.
+The ORCID iD and the DOIs are sent. A contact address is sent too, only when one is given (below). No key or account is needed.
 
 | Host | What for |
 | --- | --- |
@@ -225,7 +225,7 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - 同じ本文の写し（SSRN など）を JSON の表で渡すと、IsIdenticalTo で結ばれていない組を知らせます。片方の記録が相手を指していれば足ります。
 - 月に一度の実行は、著者の業績の目録（cpsbvbng26-dotcom の `catalog.json`）にあるすべての DOI も読みます。前の報告から指摘が変わると、消えた指摘と新しい指摘を issue に書きます。リポジトリには何もコミットしません。
 - 依存はありません。Node.js の標準ライブラリだけで動きます。網に出ずに一分で試せる見本が `examples/` にあります。
-- どこにも何も書き込みません。送るのは ORCID iD と DOI だけで、鍵もアカウントも要りません。
+- どこにも何も書き込みません。送るのは ORCID iD と DOI です。連絡先は、与えたときだけ送ります。鍵もアカウントも要りません。
 
 Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、投稿できるのは最短で 2027-05-03 です。著者以外に使われた記録はまだありません。
 
