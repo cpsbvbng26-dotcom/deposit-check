@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* The inputs of the weekly run, from the catalogue of the author's works (catalog.json in cpsbvbng26-dotcom).
+/* The inputs of the monthly run, from the catalogue of the author's works (catalog.json in cpsbvbng26-dotcom).
  *
  *   node scripts/catalog-inputs.js <catalog.json> <directory>
  *

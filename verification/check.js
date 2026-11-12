@@ -208,8 +208,8 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     && /ORCID: \$\{\{ inputs\.orcid \}\}/.test(action) && /using: composite/.test(action));
   const wfFiles = fs.readdirSync(path.join(ROOT, '.github', 'workflows'));
   const wf = (f) => read(path.join('.github', 'workflows', f));
-  /* The top level only reads. The weekly run writes its issue from its one job, and nowhere else. */
-  ok('every workflow only reads, except that the job of the weekly run may write issues; inputs go through the environment',
+  /* The top level only reads. The monthly run writes its issue from its one job, and nowhere else. */
+  ok('every workflow only reads, except that the job of the monthly run may write issues; inputs go through the environment',
     wfFiles.length >= 2 && wfFiles.every((f) => /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f))
       && (f !== 'run.yml' || /^    permissions:\n      contents: read\n      issues: write\n(?!      \w)/m.test(wf(f))) && onlyInEnv(wf(f))));
   const cff = read('CITATION.cff');
@@ -233,7 +233,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('the README says what is sent where, and that no key is needed', ['pub.orcid.org', 'api.datacite.org', 'api.crossref.org', 'api.japanlinkcenter.org', 'api.openalex.org'].every((h) => readme.includes(h)));
 
   /* ------------------------------------------------------------ 8 */
-  console.log('\n8. The weekly issue');
+  console.log('\n8. The issue of the monthly run');
   const W = require('../scripts/weekly-issue.js');
   /* A report with e errors, w warnings and i notes, each on a DOI of its own; `moved` puts the first warning on another DOI. */
   const rep = (e, w, i, moved) => {
@@ -245,7 +245,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     && p.title === 'Deposit check: 1 errors, 2 warnings' && p.body.startsWith(W.MARK) && JSON.stringify(W.countsOf(p.body)) === '{"error":1,"warning":2,"info":3}');
   const open = { number: 7, body: p.body };
   p = W.plan(open, rep(1, 2, 3), '# Deposit check\n', '2026-11-10');
-  ok('the same counts a week later: the report is replaced, with no comment', p.kind === 'update' && p.number === 7 && p.comment === null);
+  ok('the same counts a month later: the report is replaced, with no comment', p.kind === 'update' && p.number === 7 && p.comment === null);
   p = W.plan(open, rep(0, 2, 3), '# Deposit check\n', '2026-11-10');
   ok('the counts changed: a comment says how, since an edit sends no notification', p.kind === 'update' && (p.comment || '').includes('0 errors, 2 warnings, 3 notes (before: 1 errors, 2 warnings, 3 notes)'));
   p = W.plan(open, rep(0, 0, 5), '# Deposit check\n', '2026-11-17');
@@ -276,13 +276,13 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('the script posts only for the owner’s iD, and talks only to api.github.com', ws.includes('report.owner !== process.env.OWNER_ORCID')
     && (ws.match(/https:\/\/[a-z.]+/g) || []).every((u) => u === 'https://api.github.com'));
   const runYml = wf('run.yml');
-  ok('the weekly run writes the report as JSON and Markdown, and passes the token through the environment', runYml.includes('--out report.md --json-out report.json')
+  ok('the monthly run writes the report as JSON and Markdown, and passes the token through the environment', runYml.includes('--out report.md --json-out report.json')
     && runYml.includes('node scripts/weekly-issue.js report.json report.md') && /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/.test(runYml));
   const tmp = path.join(require('os').tmpdir(), 'deposit-check-' + process.pid + '.json');
   r = await run(['--doi', '10.5072/zenodo.101', '--json-out', tmp]);
   ok('--json-out writes JSON whatever --format is', r.out.startsWith('# Deposit check') && JSON.parse(fs.readFileSync(tmp, 'utf8')).read === 1);
   fs.rmSync(tmp, { force: true });
-  ok('the README says that the weekly issue exists, when it closes, and that it uses api.github.com', readme.includes('closes itself when no error or warning is left') && readme.includes('api.github.com'));
+  ok('the README says that the issue of the monthly run exists, when it closes, and that it uses api.github.com', readme.includes('closes itself when no error or warning is left') && readme.includes('api.github.com'));
 
   /* ------------------------------------------------------------ 9 */
   {
@@ -458,7 +458,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('no workflow and no action installs a package', installs.length === 0, installs.join(', '));
   const noTop = workflows.filter((f) => !/^permissions:/m.test(read(f)));
   ok('every workflow sets permissions at the top level', workflows.length > 0 && noTop.length === 0, noTop.join(', '));
-  /* The only write is the weekly issue, in run.yml. Any other write fails here. */
+  /* The only write is the issue of the monthly run, in run.yml. Any other write fails here. */
   const writes = workflows.flatMap((f) => [...read(f).matchAll(/^\s+([a-z-]+):\s*write\b/gm)].map((m) => path.basename(f) + ':' + m[1]));
   ok('the only write permission is issues: write, given to the job in run.yml', writes.join() === 'run.yml:issues'
     && /^permissions:\n  contents: read\n/m.test(read('.github/workflows/run.yml')), writes.join(', '));
@@ -532,7 +532,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     readme.includes('| `--expect-identical <file>` |') && readme.includes('One side is enough') && action.includes('EXPECT_IDENTICAL: ${{ inputs.expect-identical }}'));
 
   /* ------------------------------------------------------------ 16 */
-  console.log('\n16. The catalogue in the weekly run');
+  console.log('\n16. The catalogue in the monthly run');
   const CI = require('../scripts/catalog-inputs.js');
   const cat = CI.inputs(fixture('catalog.json'));
   ok('every DOI of the catalogue, each once: the DOI of each work, of all its versions, and its other DOIs; a work without a DOI is passed over',
@@ -550,10 +550,10 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     refusedC({}) && refusedC({ works: [] }) && refusedC(broken({ doi: 'zenodo.400' })) && refusedC(broken({ otherDois: ['SSRN 300'] }))
     && refusedC(broken({ resourceType: 'Journal article' })) && refusedC(broken({ doi: null })) && !refusedC(fixture('catalog.json')));
   const runW = wf('run.yml');
-  ok('the weekly run reads catalog.json of cpsbvbng26-dotcom from GitHub, that one file only, with no credentials left behind',
+  ok('the monthly run reads catalog.json of cpsbvbng26-dotcom from GitHub, that one file only, with no credentials left behind',
     /- uses: actions\/checkout@[0-9a-f]{40} # \S+\n\s+with:\n\s+repository: cpsbvbng26-dotcom\/cpsbvbng26-dotcom\n\s+ref: main\n\s+path: catalogue\n\s+sparse-checkout: catalog\.json\n\s+sparse-checkout-cone-mode: false\n\s+persist-credentials: false\n/.test(runW)
     && runW.includes('node scripts/catalog-inputs.js catalogue/catalog.json inputs'));
-  ok('the weekly run passes the DOIs, the types and the copies of the catalogue, for the author’s iD only',
+  ok('the monthly run passes the DOIs, the types and the copies of the catalogue, for the author’s iD only',
     /if \[ "\$iD" = "\$OWNER_ORCID" \]; then\n\s+args\+=\(--doi "\$\(cat inputs\/dois\.txt\)"\)\n\s+if \[ -f inputs\/expected-types\.json \]; then args\+=\(--expect-types inputs\/expected-types\.json\); fi\n\s+if \[ -f inputs\/expected-identical\.json \]; then args\+=\(--expect-identical inputs\/expected-identical\.json\); fi\n\s+fi\n/.test(runW));
   ok('the report is kept as an artifact of the run, before the issue is written', /- uses: actions\/upload-artifact@[0-9a-f]{40} # \S+\n\s+with:\n\s+name: deposit-check-report\n\s+path: \|\n\s+report\.md\n\s+report\.json\n/.test(runW)
     && runW.indexOf('actions/upload-artifact@') < runW.indexOf('node scripts/weekly-issue.js'));
@@ -561,7 +561,47 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const commits = workflows.concat(['action.yml']).filter((f) => /\bgit\s+(-C\s+\S+\s+)?(commit|push)\b|contents:\s*write/.test(read(f)));
   ok('no workflow commits or pushes: the runs write to no branch', commits.length === 0, commits.join(', '));
   ok('every checkout leaves no credentials behind', workflows.every((f) => [...read(f).matchAll(/uses: actions\/checkout@\S+[^\n]*\n(\s+with:\n((?:\s{10}\S[^\n]*\n)*))?/g)].every((m) => /persist-credentials: false/.test(m[2] || ''))));
-  ok('the README says the weekly run reads the catalogue and keeps the report as an artifact', readme.includes('every DOI in the catalogue of the author’s works') && readme.includes('artifact'));
+  ok('the README says the monthly run reads the catalogue and keeps the report as an artifact', readme.includes('every DOI in the catalogue of the author’s works') && readme.includes('artifact'));
+
+  /* GitHub's Terms of Service bring in the GitHub Additional Product Terms (section I), whose section on Actions limits the use
+   * of GitHub-hosted runners to the production, testing, deployment or publication of the project. Every workflow has a row
+   * in the eighth section of the legal audit, judged against it, and the run against the live APIs is a monthly test. */
+  console.log('\n17. The workflows and GitHub\'s terms for Actions (2026-11-13)');
+  const EIGHTH = '\n## 2026-11-12 の続き：八度目の見落とし\n';
+  const PURPOSE = 'If using GitHub-hosted runners, any other activity unrelated to the production, testing, deployment, or publication of the software project associated with the repository where GitHub Actions are used.';
+  const wfProblems = (text, names, run) => {
+    const bad = [];
+    const i = text.indexOf(EIGHTH);
+    if (i < 0) return ['no eighth section in the audit'];
+    const j = text.indexOf('\n## ', i + EIGHTH.length);
+    const sec = text.slice(i, j < 0 ? text.length : j);
+    const rows = sec.split('\n').filter((l) => l.startsWith('| ') && !l.startsWith('| Place |') && !l.startsWith('| --- |')).map((l) => l.slice(2, -2).split(' | '));
+    for (const r of rows) {
+      if (r.length !== 6 || !['Error', 'Insufficient basis', 'Omission', 'Wording', 'No problem'].includes(r[4])) bad.push('the shape of a row: ' + r[0].slice(0, 30));
+      else if (r[4] !== 'No problem' && !r[5].includes('Claude decided this on 2026-11-13')) bad.push('a decision without its maker: ' + r[0].slice(0, 30));
+    }
+    const named = rows.map((r) => (/^`\.github\/workflows\/([^`]+)`/.exec(r[0]) || [])[1]).filter(Boolean);
+    names.filter((n) => !named.includes(n)).forEach((n) => bad.push('no row for ' + n));
+    named.filter((n) => !names.includes(n)).forEach((n) => bad.push('a row for a missing workflow: ' + n));
+    if (!sec.includes('“' + PURPOSE + '”')) bad.push('the section on Actions is not quoted');
+    const crons = [...run.matchAll(/cron: '([^']+)'/g)].map((m) => m[1].split(' '));
+    if (crons.length !== 1 || crons[0][2] === '*' || crons[0][4] !== '*') bad.push('run.yml is scheduled more often than once a month');
+    return bad;
+  };
+  const auditText = read('docs/legal-audit-2026-11-12.md');
+  const wfNames = fs.readdirSync(path.join(ROOT, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f)).sort();
+  const runText = wf('run.yml');
+  const wp = wfProblems(auditText, wfNames, runText);
+  ok('every workflow (' + wfNames.length + ') has a row in the eighth section of the legal audit, judged against GitHub\'s terms for Actions, and the run against the live APIs is at most monthly', wp.length === 0, wp.join(', '));
+  const wpBroken = [
+    wfProblems(auditText, wfNames.concat(['newsletter.yml']), runText),
+    wfProblems(auditText, wfNames.slice(1), runText),
+    wfProblems(auditText.replace(/\n\| `\.github\/workflows\/check\.yml`[^\n]*/, ''), wfNames, runText),
+    wfProblems(auditText.replace('publication of the software project', 'promotion of the software project'), wfNames, runText),
+    wfProblems(auditText, wfNames, runText.replace("cron: '23 5 9 * *'", "cron: '23 5 * * 2'")),
+    wfProblems(auditText.replace(EIGHTH, '\n## Eighth\n'), wfNames, runText),
+  ];
+  ok('break on purpose: a new workflow, a removed one, a dropped row, a word of the quotation, a weekly run again, the heading (' + wpBroken.filter((b) => b.length).length + ' / ' + wpBroken.length + ')', wpBroken.every((b) => b.length > 0));
 
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }

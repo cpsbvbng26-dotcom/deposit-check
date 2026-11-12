@@ -1,5 +1,8 @@
 name: run
-# Run the tool against the live APIs: by hand, or once a week for the author's own works.
+# Run the tool against the live APIs: by hand, or once a month for the author's own works. This is the test of the tool
+# against the APIs as they are now; the checks use made-up records only (verification/fixtures). Until 2026-11-13 it ran once
+# a week. GitHub's terms allow Actions on GitHub's runners only for the production, testing, deployment or publication of
+# this project, and a test against the live APIs does not need a weekly run (docs/legal-audit-2026-11-12.md, the eighth pass).
 # For the author's iD the run also reads every DOI in the catalogue of the author's works (catalog.json in
 # cpsbvbng26-dotcom, read from GitHub at its main), with the types and the copies elsewhere that the catalogue gives.
 # The report goes to the job summary and to an artifact. For the author's iD it also goes to one open issue: a comment
@@ -13,13 +16,13 @@ on:
         required: true
         default: 0009-0000-1406-0547
   schedule:
-    - cron: '23 5 * * 2'
+    - cron: '23 5 9 * *'
 permissions:
   contents: read
 jobs:
   run:
     runs-on: ubuntu-latest
-    # The weekly issue is the only write, so only this job gets it.
+    # The run's issue is the only write, so only this job gets it.
     permissions:
       contents: read
       issues: write

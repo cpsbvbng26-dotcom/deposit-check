@@ -54,7 +54,7 @@ Only one module reaches the network. It makes GET requests one at a time, retrie
 The metadata of each agency is read into one shape. Each rule is a pure function of one record or of the whole set, with a severity and a fix.
 The versions of one work are read together: only the latest version is checked, and a work missing from the ORCID record is reported once.
 The checks run without the network, on made-up records that use test DOI prefixes and the example iD that ORCID documents. Each check was broken once on purpose, to see that it fails.
-A weekly run reads the author's own iD and every DOI in the catalogue of the author's works. It keeps one issue with the latest report, and comments with the findings that are gone and the ones that are new.
+A monthly run reads the author's own iD and every DOI in the catalogue of the author's works. It keeps one issue with the latest report, and comments with the findings that are gone and the ones that are new.
 
 # Research impact statement
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* The weekly run keeps one open issue with the latest report, so that its findings reach the owner as a notification.
+/* The monthly run (the file keeps its old name) keeps one open issue with the latest report, so that its findings reach the owner as a notification.
  *
  *   node scripts/weekly-issue.js report.json report.md
  *
@@ -60,7 +60,7 @@ function plan(open, report, md, when, catalogue) {
   const kept = JSON.stringify(keys);
   const head = MARK + '\n<!-- counts: ' + JSON.stringify(c) + ' -->\n<!-- findings-sha256: ' + digest(keys) + ' -->\n'
     + (kept.length <= KEEP ? '<!-- findings: ' + kept + ' -->\n' : '')
-    + '**Weekly run, ' + when + '.** This issue is updated each week, and closes itself when no error or warning is left.'
+    + '**Monthly run, ' + when + '.** This issue is updated each month, and closes itself when no error or warning is left.'
     + (catalogue ? ' Every DOI in `catalog.json` of cpsbvbng26-dotcom, at ' + catalogue + ', was read as well.' : '') + '\n\n';
   /* GitHub takes a body of 65536 characters at most: the report gets what the head leaves. */
   const room = Math.min(LIMIT, MAX - head.length);
