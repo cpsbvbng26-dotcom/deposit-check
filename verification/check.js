@@ -200,7 +200,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const pkg = JSON.parse(read('package.json'));
   ok('no dependencies; Node.js 22; MIT; the command is bin/deposit-check.js', !pkg.dependencies && !pkg.devDependencies && pkg.engines.node === '>=22'
     && pkg.license === 'MIT' && pkg.bin['deposit-check'] === 'bin/deposit-check.js');
-  ok('LICENSE is MIT, and the README says the text is under CC BY 4.0', /^MIT License/.test(read('LICENSE')) && readme.includes('CC BY 4.0'));
+  ok('LICENSE is MIT, and the README says the text is under CC BY 4.0, with a link to the licence (legal audit, 2026-11-12)', /^MIT License/.test(read('LICENSE')) && readme.includes('[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)'));
   const action = read('action.yml');
   /* An expression may appear only as the value of an environment variable, never in a command, a block or a name. */
   const onlyInEnv = (y) => y.split('\n').filter((l) => l.includes('${{')).every((l) => /^\s+[A-Z][A-Z0-9_]*: \$\{\{ (inputs\.[a-z-]+|secrets\.GITHUB_TOKEN) \}\}$/.test(l));
