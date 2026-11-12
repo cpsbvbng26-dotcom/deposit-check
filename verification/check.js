@@ -104,10 +104,10 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('every rule has an id, a scope, a severity, a title and a fix, and the ids are distinct',
     R.RULES.every((r) => /^[a-z]+(-[a-z]+)*$/.test(r.id) && ['record', 'set'].includes(r.scope) && R.SEVERITIES.includes(r.severity) && r.title && r.fix.length > 20)
     && new Set(R.RULES.map((r) => r.id)).size === R.RULES.length);
-  /* The set rules are raised in section 3, and type-unexpected in section 10. */
+  /* The set rules are raised in section 3, type-unexpected in section 10, and identical-unlinked in section 15. */
   ok('every rule is raised by some case in these checks', (() => {
     const seen = new Set([...expected200, 'abstract-short', 'licence-missing', 'date-missing']);
-    return R.RULES.every((r) => seen.has(r.id) || ['unresolved', 'not-on-orcid', 'same-title', 'openalex-missing', 'openalex-abstract-missing', 'type-unexpected'].includes(r.id));
+    return R.RULES.every((r) => seen.has(r.id) || ['unresolved', 'not-on-orcid', 'same-title', 'openalex-missing', 'openalex-abstract-missing', 'type-unexpected', 'identical-unlinked'].includes(r.id));
   })());
 
   /* ------------------------------------------------------------ 3 */
@@ -190,7 +190,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   global.fetch = realFetch;
   ok('every request waits a moment after the last, and the waits grow', F.GAP_MS >= 200 && F.RETRY_WAITS_MS.length === 2 && F.RETRY_WAITS_MS[1] > F.RETRY_WAITS_MS[0]);
   ok('no contact address is built in; one can be given in DEPOSIT_CHECK_MAILTO', !/mailto:[^'"]/.test(read('src/fetch.js').replace("'; mailto:' + mailto", '')) && read('src/fetch.js').includes('process.env.DEPOSIT_CHECK_MAILTO'));
-  ok('only src/fetch.js reaches the network', ['src/metadata.js', 'src/rules.js', 'src/report.js', 'bin/deposit-check.js'].every((f) => !/\bfetch\(/.test(read(f))));
+  ok('only src/fetch.js reaches the network', ['src/metadata.js', 'src/rules.js', 'src/report.js', 'bin/deposit-check.js', 'scripts/catalog-inputs.js'].every((f) => !/\bfetch\(/.test(read(f))));
 
   /* ------------------------------------------------------------ 7 */
   console.log('\n7. The repository');
@@ -235,7 +235,11 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   /* ------------------------------------------------------------ 8 */
   console.log('\n8. The weekly issue');
   const W = require('../scripts/weekly-issue.js');
-  const rep = (e, w, i) => ({ owner: OWNER, counts: { error: e, warning: w, info: i } });
+  /* A report with e errors, w warnings and i notes, each on a DOI of its own; `moved` puts the first warning on another DOI. */
+  const rep = (e, w, i, moved) => {
+    const f = (sev, rule, n, base) => Array.from({ length: n }, (_, k) => ({ rule, severity: sev, doi: '10.5072/' + base + '.' + (k === 0 && moved && sev === 'warning' ? 900 : k) }));
+    return { owner: OWNER, counts: { error: e, warning: w, info: i }, findings: [].concat(f('error', 'abstract-missing', e, 'e'), f('warning', 'keywords-missing', w, 'w'), f('info', 'language-missing', i, 'i')) };
+  };
   let p = W.plan(null, rep(1, 2, 3), '# Deposit check\n', '2026-11-03');
   ok('errors or warnings and no open issue: one is opened, with the counts in its title and kept in the body', p.kind === 'create'
     && p.title === 'Deposit check: 1 errors, 2 warnings' && p.body.startsWith(W.MARK) && JSON.stringify(W.countsOf(p.body)) === '{"error":1,"warning":2,"info":3}');
@@ -248,6 +252,26 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('no error or warning left: the issue is closed with a comment; notes alone do not open one', p.kind === 'close' && p.number === 7
     && W.plan(null, rep(0, 0, 5), '', '2026-11-17').kind === 'none');
   ok('a long report is cut, and says where the whole one is', W.plan(null, rep(1, 0, 0), 'x'.repeat(W.LIMIT + 10), 'd').body.includes('The whole report is in the job summary'));
+  /* 417: the issue keeps the findings of the last report, so that the next run says what changed, not only how many. */
+  ok('the issue keeps each finding as its rule and DOI', JSON.stringify(W.keptOf(W.plan(null, rep(1, 1, 0), '', 'd').body).keys) === '["abstract-missing 10.5072/e.0","keywords-missing 10.5072/w.0"]');
+  p = W.plan(open, rep(1, 2, 3, true), '# Deposit check\n', '2026-11-10');
+  ok('the same counts and other findings: a comment names the finding that is gone and the one that is new', p.kind === 'update'
+    && (p.comment || '').includes('No longer found:\n- `keywords-missing` 10.5072/w.0') && (p.comment || '').includes('New:\n- `keywords-missing` 10.5072/w.900'), p.comment);
+  p = W.plan(open, rep(1, 3, 3), '# Deposit check\n', '2026-11-10');
+  ok('a new finding alone: the comment names it, and names nothing as gone', (p.comment || '').includes('New:\n- `keywords-missing` 10.5072/w.2') && !(p.comment || '').includes('No longer found'));
+  const oldBody = W.MARK + '\n<!-- counts: {"error":1,"warning":2,"info":3} -->\n**Weekly run, 2026-11-03.**\n';
+  ok('an issue from before, which kept only the counts: the counts are compared',
+    W.plan({ number: 7, body: oldBody }, rep(1, 2, 3), '', 'd').comment === null && (W.plan({ number: 7, body: oldBody }, rep(1, 2, 4), '', 'd').comment || '').includes('before: 1 errors, 2 warnings, 3 notes'));
+  const many = rep(0, 2000, 0);
+  const manyBody = W.plan(null, many, 'x'.repeat(W.LIMIT + 10), 'd').body;
+  ok('a long list of findings is kept as a digest, which still tells a change; the body stays within what GitHub takes',
+    W.keptOf(manyBody).keys === null && W.keptOf(manyBody).sum === W.digest(W.keysOf(many)) && manyBody.length <= 65536
+    && W.plan({ number: 7, body: manyBody }, many, '', 'd').comment === null && W.plan({ number: 7, body: manyBody }, rep(0, 2000, 0, true), '', 'd').comment !== null);
+  const longKept = W.plan(null, rep(0, 550, 0), 'x'.repeat(W.LIMIT + 10), 'd').body;
+  ok('a list of findings kept in full shortens the report, so that the body stays within what GitHub takes',
+    W.keptOf(longKept).keys !== null && W.keptOf(longKept).keys.length === 550 && longKept.length <= 65536 && longKept.includes('The whole report is in the job summary'), String(longKept.length));
+  ok('the issue says when the catalogue was read, and at which commit', W.plan(null, rep(1, 0, 0), '', 'd', 'abc123def456').body.includes('Every DOI in `catalog.json` of cpsbvbng26-dotcom, at abc123def456, was read as well.')
+    && !W.plan(null, rep(1, 0, 0), '', 'd', null).body.includes('catalog.json'));
   const ws = read('scripts/weekly-issue.js');
   ok('the script posts only for the owner’s iD, and talks only to api.github.com', ws.includes('report.owner !== process.env.OWNER_ORCID')
     && (ws.match(/https:\/\/[a-z.]+/g) || []).every((u) => u === 'https://api.github.com'));
@@ -360,14 +384,16 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     ['language-missing', { language: '' }],
     ['version-unlinked', { relations: [{ type: 'References', id: '10.1/x', idType: 'DOI' }] }],
     ['relations-none', { relations: [], version: '' }],
+    ['identical-unlinked', {}, null, { '10.5072/zenodo.101': ['10.5555/crossref.300'] }],
     ['openalex-missing', { openalex: { held: false, abstract: false } }],
     ['openalex-abstract-missing', { openalex: { held: true, abstract: false } }],
   ];
   const complete = Object.assign({}, d101, { openalex: { held: true, abstract: true } });
-  const raised = (rec, expected) => R.audit({ owner: OWNER, works: [], found: new Set(), records: new Map([[rec.doi, rec]]), expected: expected ? new Map(Object.entries(expected)) : null }).map((f) => f.rule);
+  const raised = (rec, expected, identical) => R.audit({ owner: OWNER, works: [], found: new Set(), records: new Map([[rec.doi, rec]]),
+    expected: expected ? new Map(Object.entries(expected)) : null, identical: identical ? new Map(Object.entries(identical)) : null }).map((f) => f.rule);
   ok('the complete record, held by OpenAlex with its abstract, gives nothing', raised(complete).length === 0, raised(complete).join());
-  for (const [id, patch, expected] of BREAKS) {
-    const got = raised(Object.assign({}, complete, patch), expected);
+  for (const [id, patch, expected, identical] of BREAKS) {
+    const got = raised(Object.assign({}, complete, patch), expected, identical);
     ok('break for ' + id + ': raises it and no other', got.join() === id, got.join() || 'nothing');
   }
   const recordRules = R.RULES.filter((x) => x.scope === 'record').map((x) => x.id);
@@ -441,6 +467,87 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   }
   ok('no tracked file holds a private key or a token (' + tracked.length + ' files)', secrets.length === 0, secrets.join(', '));
   ok('no tracked file holds an e-mail address other than the allowed ones', mails.length === 0, mails.slice(0, 10).join(', '));
+
+  /* ------------------------------------------------------------ 15 */
+  console.log('\n15. Copies of the same text');
+  const ide = M.expectedIdentical({ _: 'a comment', '10.5072/Zenodo.101': 'https://doi.org/10.5555/CROSSREF.300', '10.5072/zenodo.400': ['10.5555/crossref.300', 'https://PhilArchive.org/rec/EXAMPLE/'] });
+  ok('a file of copies is read: comments are skipped, a copy is one DOI or a list, DOIs are lower-cased, URLs lose their scheme and case',
+    ide.size === 2 && ide.get('10.5072/zenodo.101').join() === '10.5555/crossref.300' && ide.get('10.5072/zenodo.400').join() === '10.5555/crossref.300,philarchive.org/rec/example');
+  const refusedI = (j) => { try { M.expectedIdentical(j); return false; } catch (e) { return true; } };
+  ok('a key that is not a DOI, no copy, a copy that is neither a DOI nor a URL, a DOI as its own copy, an empty file and a list are refused',
+    refusedI({ 'zenodo.101': '10.5555/crossref.300' }) && refusedI({ '10.5072/zenodo.101': [] }) && refusedI({ '10.5072/zenodo.101': 'SSRN 300' })
+    && refusedI({ '10.5072/zenodo.101': 3 }) && refusedI({ '10.5072/zenodo.101': '10.5072/ZENODO.101' }) && refusedI({ _: 'only a comment' }) && refusedI([])
+    && !refusedI({ '10.5072/zenodo.101': '10.5555/crossref.300' }));
+  const copies = (recs, identical) => R.audit({ owner: null, works: [], found: new Set(), records: new Map(recs.map((x) => [x.doi, x])), identical: new Map(Object.entries(identical)) })
+    .filter((f) => f.rule === 'identical-unlinked').map((f) => f.doi + ' ' + f.detail);
+  const pair = { '10.5072/zenodo.101': ['10.5555/crossref.300'] };
+  const withRel = (rec, rel) => Object.assign({}, rec, { relations: rec.relations.concat([rel]) });
+  ok('identical-unlinked: neither record names the other', copies([d101, c300], pair).join() === '10.5072/zenodo.101 not linked to 10.5555/crossref.300', copies([d101, c300], pair).join());
+  ok('identical-unlinked: not raised when this record names the copy with IsIdenticalTo, given as a doi.org URL in another case',
+    copies([withRel(d101, { type: 'IsIdenticalTo', id: 'https://doi.org/10.5555/CROSSREF.300', idType: 'URL' }), c300], pair).length === 0);
+  ok('identical-unlinked: not raised when the copy names this record, or the record of all its versions',
+    copies([d101, withRel(c300, { type: 'IsIdenticalTo', id: '10.5072/zenodo.100', idType: 'DOI' })], pair).length === 0
+    && copies([d101, withRel(c300, { type: 'IsIdenticalTo', id: '10.5072/zenodo.101', idType: 'DOI' })], pair).length === 0);
+  ok('identical-unlinked: a link of another type does not count, and the detail says which type it is',
+    copies([withRel(d101, { type: 'IsVariantFormOf', id: '10.5555/crossref.300', idType: 'DOI' })], pair).join() === '10.5072/zenodo.101 not linked to 10.5555/crossref.300 (linked as IsVariantFormOf only)');
+  ok('identical-unlinked: a copy given as a URL is compared without its scheme, case or trailing slash',
+    copies([withRel(d101, { type: 'IsIdenticalTo', id: 'https://philarchive.org/rec/EXAMPLE', idType: 'URL' })], { '10.5072/zenodo.101': ['philarchive.org/rec/example'] }).length === 0
+    && copies([d101], { '10.5072/zenodo.101': ['philarchive.org/rec/example'] }).join() === '10.5072/zenodo.101 not linked to philarchive.org/rec/example');
+  /* A new version must keep the link: copies given for an older version hold for the version that is checked. */
+  const v1 = Object.assign({}, d101, { doi: '10.5072/zenodo.99', version: 'v1', relations: [{ type: 'IsVersionOf', id: '10.5072/zenodo.100', idType: 'DOI' }, { type: 'IsIdenticalTo', id: '10.5555/crossref.300', idType: 'DOI' }] });
+  ok('identical-unlinked: copies given for an older version are checked on the latest one, which lost the link',
+    copies([v1, d101], { '10.5072/zenodo.99': ['10.5555/crossref.300'] }).join() === '10.5072/zenodo.101 not linked to 10.5555/crossref.300'
+    && copies([v1, withRel(d101, { type: 'IsIdenticalTo', id: '10.5555/crossref.300', idType: 'DOI' })], { '10.5072/zenodo.99': ['10.5555/crossref.300'] }).length === 0);
+  ok('identical-unlinked is not raised without a file of copies', R.audit({ owner: null, works: [], found: new Set(), records: new Map([[d101.doi, d101]]) }).every((f) => f.rule !== 'identical-unlinked'));
+  const tmpCopies = path.join(require('os').tmpdir(), 'deposit-check-copies-' + process.pid + '.json');
+  fs.writeFileSync(tmpCopies, JSON.stringify(pair));
+  const copyUrls = [];
+  {
+    const out = sink(); const err = sink();
+    const code = await CLI.main(['--expect-identical', tmpCopies, '--format', 'json'], { get: stubGet(copyUrls), stdout: out, stderr: err, env: {} });
+    const got = JSON.parse(out.text);
+    ok('--expect-identical alone: the DOI and its copy are both read, and the missing link is a warning', code === 0 && got.read === 2
+      && got.findings.filter((f) => f.rule === 'identical-unlinked').map((f) => f.severity + ' ' + f.doi).join() === 'warning 10.5072/zenodo.101'
+      && copyUrls.includes('https://api.crossref.org/works/10.5555%2Fcrossref.300'), out.text.slice(0, 200));
+  }
+  fs.writeFileSync(tmpCopies, JSON.stringify({ '10.5072/zenodo.101': 'SSRN 300' }));
+  r = await run(['--expect-identical', tmpCopies]);
+  ok('a file of copies that cannot be read: exit 2, before any request', r.code === 2 && r.out === '' && r.err.includes('not a DOI or a URL'));
+  fs.rmSync(tmpCopies, { force: true });
+  ok('the README gives --expect-identical, and says that one side of the link is enough',
+    readme.includes('| `--expect-identical <file>` |') && readme.includes('One side is enough') && action.includes('EXPECT_IDENTICAL: ${{ inputs.expect-identical }}'));
+
+  /* ------------------------------------------------------------ 16 */
+  console.log('\n16. The catalogue in the weekly run');
+  const CI = require('../scripts/catalog-inputs.js');
+  const cat = CI.inputs(fixture('catalog.json'));
+  ok('every DOI of the catalogue, each once: the DOI of each work, of all its versions, and its other DOIs; a work without a DOI is passed over',
+    cat.dois.join() === '10.5072/zenodo.100,10.5072/zenodo.101,10.5072/zenodo.400,10.5555/crossref.300', cat.dois.join());
+  ok('the expected types are the types the catalogue gives, and only those it gives', JSON.stringify(Object.entries(cat.types).filter(([k]) => !k.startsWith('_')))
+    === '[["10.5072/zenodo.101","Preprint"],["10.5072/zenodo.400","Preprint"]]' && M.expectedTypes(cat.types).size === 2);
+  ok('the copies are the other DOIs the catalogue gives, and the command reads them', JSON.stringify(Object.entries(cat.identical).filter(([k]) => !k.startsWith('_')))
+    === '[["10.5072/zenodo.400",["10.5555/crossref.300"]]]' && M.expectedIdentical(cat.identical).get('10.5072/zenodo.400').join() === '10.5555/crossref.300');
+  const noCopies = JSON.parse(JSON.stringify(fixture('catalog.json')));
+  noCopies.works.forEach((w) => { w.otherDois = []; });
+  ok('a catalogue with no other DOIs gives no file of copies, rather than an empty one the command would refuse', CI.inputs(noCopies).identical === null);
+  const refusedC = (j) => { try { CI.inputs(j); return false; } catch (e) { return true; } };
+  const broken = (patch) => { const j = JSON.parse(JSON.stringify(fixture('catalog.json'))); Object.assign(j.works[1], patch); return j; };
+  ok('a catalogue that is not one, a DOI that is not a DOI, a type of two words, and a copy without the DOI of its work stop the run',
+    refusedC({}) && refusedC({ works: [] }) && refusedC(broken({ doi: 'zenodo.400' })) && refusedC(broken({ otherDois: ['SSRN 300'] }))
+    && refusedC(broken({ resourceType: 'Journal article' })) && refusedC(broken({ doi: null })) && !refusedC(fixture('catalog.json')));
+  const runW = wf('run.yml');
+  ok('the weekly run reads catalog.json of cpsbvbng26-dotcom from GitHub, that one file only, with no credentials left behind',
+    /- uses: actions\/checkout@[0-9a-f]{40} # \S+\n\s+with:\n\s+repository: cpsbvbng26-dotcom\/cpsbvbng26-dotcom\n\s+ref: main\n\s+path: catalogue\n\s+sparse-checkout: catalog\.json\n\s+sparse-checkout-cone-mode: false\n\s+persist-credentials: false\n/.test(runW)
+    && runW.includes('node scripts/catalog-inputs.js catalogue/catalog.json inputs'));
+  ok('the weekly run passes the DOIs, the types and the copies of the catalogue, for the author’s iD only',
+    /if \[ "\$iD" = "\$OWNER_ORCID" \]; then\n\s+args\+=\(--doi "\$\(cat inputs\/dois\.txt\)"\)\n\s+if \[ -f inputs\/expected-types\.json \]; then args\+=\(--expect-types inputs\/expected-types\.json\); fi\n\s+if \[ -f inputs\/expected-identical\.json \]; then args\+=\(--expect-identical inputs\/expected-identical\.json\); fi\n\s+fi\n/.test(runW));
+  ok('the report is kept as an artifact of the run, before the issue is written', /- uses: actions\/upload-artifact@[0-9a-f]{40} # \S+\n\s+with:\n\s+name: deposit-check-report\n\s+path: \|\n\s+report\.md\n\s+report\.json\n/.test(runW)
+    && runW.indexOf('actions/upload-artifact@') < runW.indexOf('node scripts/weekly-issue.js'));
+  /* A scheduled run never commits: it has no write to contents, and no workflow runs git commit or git push. */
+  const commits = workflows.concat(['action.yml']).filter((f) => /\bgit\s+(-C\s+\S+\s+)?(commit|push)\b|contents:\s*write/.test(read(f)));
+  ok('no workflow commits or pushes: the runs write to no branch', commits.length === 0, commits.join(', '));
+  ok('every checkout leaves no credentials behind', workflows.every((f) => [...read(f).matchAll(/uses: actions\/checkout@\S+[^\n]*\n(\s+with:\n((?:\s{10}\S[^\n]*\n)*))?/g)].every((m) => /persist-credentials: false/.test(m[2] || ''))));
+  ok('the README says the weekly run reads the catalogue and keeps the report as an artifact', readme.includes('every DOI in the catalogue of the author’s works') && readme.includes('artifact'));
 
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
