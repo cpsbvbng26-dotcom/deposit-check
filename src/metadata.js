@@ -185,4 +185,36 @@ function expectedTypes(json) {
   return out;
 }
 
-module.exports = { expectedTypes, plain, orcidOf, doiOf, validOrcid, licenceOf, fromDataCite, fromCrossref, fromJaLC, orcidWorks, dataciteFound, crossrefFound };
+/* A related identifier in one form, so that two spellings of it compare equal: a DOI bare and lower-cased, whether it was
+ * given bare or as a doi.org URL; any other URL lower-cased, without its scheme and a trailing slash. */
+function relatedKey(s) {
+  const t = String(s || '').trim();
+  if (/^(https?:\/\/(dx\.)?doi\.org\/|doi:)?10\.\d{4,9}\//i.test(t)) return doiOf(t);
+  return t.toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+}
+
+/* The copies of the same text that each DOI should be linked to with IsIdenticalTo, from a JSON file:
+ * { "<DOI>": "<DOI or URL of a copy>" | ["<DOI or URL>", …], … }. The key is the record that should carry the link.
+ * Keys that start with _ are comments. A key that is not a DOI, or a copy that is neither a DOI nor a URL, is refused,
+ * so that a mistyped file does not pass as a file with no copies. */
+function expectedIdentical(json) {
+  if (!json || typeof json !== 'object' || Array.isArray(json)) throw new Error('the expected copies are not a JSON object');
+  const out = new Map();
+  for (const [k, v] of Object.entries(json)) {
+    if (k.startsWith('_')) continue;
+    const doi = doiOf(k);
+    if (!doi || doi !== k.trim().toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//, '')) throw new Error('not a DOI in the expected copies: ' + k);
+    const list = typeof v === 'string' ? [v] : v;
+    if (!Array.isArray(list) || !list.length) throw new Error('no copy given for ' + k);
+    const copies = list.map((c) => {
+      if (typeof c !== 'string' || !(/^10\.\d{4,9}\/\S+$/.test(c.trim()) || /^https?:\/\/\S+$/.test(c.trim()))) throw new Error('not a DOI or a URL for ' + k + ': ' + JSON.stringify(c));
+      return relatedKey(c);
+    });
+    if (copies.includes(doi)) throw new Error('a DOI given as a copy of itself: ' + k);
+    out.set(doi, [...new Set((out.get(doi) || []).concat(copies))]);
+  }
+  if (!out.size) throw new Error('no DOI in the expected copies');
+  return out;
+}
+
+module.exports = { expectedTypes, expectedIdentical, relatedKey, plain, orcidOf, doiOf, validOrcid, licenceOf, fromDataCite, fromCrossref, fromJaLC, orcidWorks, dataciteFound, crossrefFound };
