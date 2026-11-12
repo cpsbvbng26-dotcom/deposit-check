@@ -1,0 +1,38 @@
+{
+ "_": "A made-up catalogue in the shape of catalog.json in cpsbvbng26-dotcom, for the checks of scripts/catalog-inputs.js.",
+ "asOf": "2026-11-12",
+ "works": [
+  {
+   "id": "a-dataset",
+   "doi": "10.5072/zenodo.101",
+   "conceptDoi": "10.5072/zenodo.100",
+   "otherDois": [],
+   "resourceType": "Preprint",
+   "registry": "DataCite (Zenodo)"
+  },
+  {
+   "id": "a-paper-with-a-copy",
+   "doi": "10.5072/zenodo.400",
+   "conceptDoi": null,
+   "otherDois": ["10.5555/crossref.300"],
+   "resourceType": "Preprint",
+   "registry": "DataCite (Zenodo)"
+  },
+  {
+   "id": "a-paper-at-crossref-only",
+   "doi": "10.5555/crossref.300",
+   "conceptDoi": null,
+   "otherDois": [],
+   "resourceType": "",
+   "registry": "Crossref"
+  },
+  {
+   "id": "a-page-without-a-doi",
+   "doi": null,
+   "conceptDoi": null,
+   "otherDois": [],
+   "resourceType": null,
+   "registry": null
+  }
+ ]
+}

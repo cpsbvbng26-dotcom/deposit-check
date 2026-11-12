@@ -1,7 +1,10 @@
 name: run
-# Run the tool against the live APIs: by hand, or once a week for the author's own iD.
-# The report goes to the job summary. For the author's iD it also goes to one open issue, which closes itself
-# when no error or warning is left.
+# Run the tool against the live APIs: by hand, or once a week for the author's own works.
+# For the author's iD the run also reads every DOI in the catalogue of the author's works (catalog.json in
+# cpsbvbng26-dotcom, read from GitHub at its main), with the types and the copies elsewhere that the catalogue gives.
+# The report goes to the job summary and to an artifact. For the author's iD it also goes to one open issue: a comment
+# says which findings are gone and which are new since the last report, and the issue closes itself when no error or
+# warning is left. Nothing is committed: the run writes to no branch.
 on:
   workflow_dispatch:
     inputs:
@@ -22,13 +25,47 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # The catalogue: one public file of another repository, read and never written.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: cpsbvbng26-dotcom/cpsbvbng26-dotcom
+          ref: main
+          path: catalogue
+          sparse-checkout: catalog.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
-      - run: node bin/deposit-check.js --orcid "${ORCID:-$OWNER_ORCID}" --summary --fail-on never --out report.md --json-out report.json > /dev/null
+      - name: The DOIs, the types and the copies of the catalogue
+        run: |
+          node scripts/catalog-inputs.js catalogue/catalog.json inputs
+          echo "CATALOGUE_COMMIT=$(git -C catalogue rev-parse --short=12 HEAD)" >> "$GITHUB_ENV"
+      - name: The run
+        run: |
+          iD="${ORCID:-$OWNER_ORCID}"
+          args=(--orcid "$iD" --summary --fail-on never --out report.md --json-out report.json)
+          # The catalogue is the author's, so it is read with the author's iD only.
+          if [ "$iD" = "$OWNER_ORCID" ]; then
+            args+=(--doi "$(cat inputs/dois.txt)")
+            if [ -f inputs/expected-types.json ]; then args+=(--expect-types inputs/expected-types.json); fi
+            if [ -f inputs/expected-identical.json ]; then args+=(--expect-identical inputs/expected-identical.json); fi
+          fi
+          node bin/deposit-check.js "${args[@]}" > /dev/null
         env:
           ORCID: ${{ inputs.orcid }}
           OWNER_ORCID: 0009-0000-1406-0547
+      # The report is kept with the run, whether or not an issue is open.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deposit-check-report
+          path: |
+            report.md
+            report.json
+            inputs/
+          retention-days: 90
       - run: node scripts/weekly-issue.js report.json report.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

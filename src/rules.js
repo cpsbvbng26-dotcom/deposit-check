@@ -9,6 +9,8 @@
  *   info     worth knowing; often fine as it is
  */
 
+const M = require('./metadata.js');
+
 const SEVERITIES = ['error', 'warning', 'info'];
 const VERSION_RELATIONS = /^(IsVersionOf|HasVersion|IsNewVersionOf|IsPreviousVersionOf)$/;
 const norm = (s) => String(s || '').toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
@@ -104,6 +106,15 @@ const RULES = [
     check: (r) => (r.relations.length ? [] : ['no related identifiers']),
   },
   {
+    id: 'identical-unlinked', scope: 'record', severity: 'warning',
+    title: 'A copy of the same text is not linked with IsIdenticalTo',
+    fix: 'Add the copy as a related work of the type IsIdenticalTo at the repository (on Zenodo: Related works, “Is identical to”), so that indexes can tell the two are one text and its citations are not split. One side is enough: an SSRN record cannot carry the link, and the Zenodo record can. Or correct the copies given with --expect-identical.',
+    check: (r, ctx) => copiesOf(r, ctx).filter((id) => !identicalLinked(r, id, ctx)).map((id) => {
+      const other = r.relations.filter((x) => M.relatedKey(x.id) === id).map((x) => x.type);
+      return 'not linked to ' + id + (other.length ? ' (linked as ' + other.join(', ') + ' only)' : '');
+    }),
+  },
+  {
     id: 'openalex-missing', scope: 'record', severity: 'info',
     title: 'OpenAlex does not hold the work',
     fix: 'OpenAlex takes new works from DataCite and Crossref, usually within days. If the work is older than that, check that its DOI metadata is complete, or ask OpenAlex through its support form.',
@@ -176,6 +187,28 @@ function family(r) {
 function expectedType(r, ctx) {
   if (!ctx || !ctx.expected) return null;
   return ctx.expected.get(r.doi) || ctx.expected.get(family(r)) || null;
+}
+
+/* The copies a record should be linked to (ctx.identical: Map of lower-cased DOI → related keys, from --expect-identical).
+ * Copies given for any version of the work, or for the record of all versions, hold for the version that is checked:
+ * a new version must keep the link. */
+function copiesOf(r, ctx) {
+  if (!ctx || !ctx.identical) return [];
+  const out = new Set();
+  for (const [k, copies] of ctx.identical) {
+    const keyed = ctx.records.get(k);
+    if (k === r.doi || k === family(r) || (keyed && family(keyed) === family(r))) copies.forEach((c) => out.add(c));
+  }
+  return [...out];
+}
+
+/* Linked when either record names the other with IsIdenticalTo: this record names the copy, or the copy (when it was
+ * read) names this record or the record of all its versions. */
+function identicalLinked(r, copy, ctx) {
+  const names = (rec, ids) => rec.relations.some((x) => x.type === 'IsIdenticalTo' && ids.includes(M.relatedKey(x.id)));
+  if (names(r, [copy])) return true;
+  const other = ctx.records.get(copy);
+  return !!other && names(other, [r.doi, family(r)]);
 }
 
 /* Of the versions of one work that were read, only the latest is checked: the others repeat it, and every finding

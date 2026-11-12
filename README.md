@@ -45,6 +45,7 @@ node bin/deposit-check.js --orcid 0000-0002-1825-0097 --format json --fail-on wa
 | `--orcid <iD>` | Check the works of this ORCID iD. The iD may also be given as its URL. A wrong check digit is refused before any request. |
 | `--doi <DOI>` | Check this DOI as well. May be given more than once. |
 | `--expect-types <file>` | A JSON file of DOIs and the resource type each should have (see below). Each DOI in it is checked as well. |
+| `--expect-identical <file>` | A JSON file of DOIs and the copies of the same text each should be linked to (see below). Each DOI in it is checked as well. |
 | `--format markdown\|json` | The report's format. Markdown by default. |
 | `--fail-on error\|warning\|info\|never` | Exit 1 when a finding is this serious or more. `error` by default. |
 | `--out <file>` | Write the report to a file as well. |
@@ -64,7 +65,7 @@ The exit status is 0 when nothing reaches `--fail-on`, 1 when something does, an
 ```
 
 The report is written to the job summary. Pin the action to a commit for a stable result.
-The inputs are `orcid`, `dois` (separated by spaces or commas), `expect-types`, `fail-on`, `mailto` and `answers`.
+The inputs are `orcid`, `dois` (separated by spaces or commas), `expect-types`, `expect-identical`, `fail-on`, `mailto` and `answers`.
 Each reaches the command through the environment, never through the command line itself.
 The repository's own CI uses the action on itself, on the example and without the network: the example passes, and fails once warnings count.
 
@@ -85,6 +86,7 @@ The repository's own CI uses the action on itself, on the example and without th
 | `language-missing` | info | No language |
 | `version-unlinked` | warning | A version without a link to its other versions |
 | `relations-none` | info | No related works |
+| `identical-unlinked` | warning | A copy of the same text is not linked with IsIdenticalTo |
 | `openalex-missing` | info | OpenAlex does not hold the work |
 | `openalex-abstract-missing` | warning | The DOI metadata has an abstract, and OpenAlex has none |
 | `unresolved` | error | A DOI on the ORCID record is not found at DataCite, Crossref or JaLC |
@@ -117,6 +119,22 @@ Give the type each DOI should have in a JSON file, as DataCite's `resourceTypeGe
 `--expect-types` reads it, checks each DOI in it, and raises `type-unexpected` where the registered `resourceTypeGeneral` differs. Case does not matter.
 A type given for the DOI of all versions (Zenodo's concept DOI) holds for each version. Only records registered by DataCite are compared, since Crossref and JaLC name their types in other words. Keys that start with `_` are comments.
 
+### Copies of the same text
+
+A paper deposited at Zenodo may also be at SSRN, PhilArchive or another place. Unless the records are linked, indexes count two texts, and the citations are split between them. `same-title` notices two deposits with the same title, but a copy often has another title.
+Give the copies of each DOI in a JSON file, as a DOI or a URL, one or a list:
+
+```json
+{
+  "10.5281/zenodo.1234567": "10.2139/ssrn.7654321",
+  "10.5281/zenodo.2345678": ["10.2139/ssrn.8765432", "https://philarchive.org/rec/EXAMPLE"]
+}
+```
+
+`--expect-identical` reads it, checks each DOI in it, and raises `identical-unlinked` where neither record names the other with IsIdenticalTo.
+One side is enough. An SSRN record cannot carry the link, and the Zenodo record can. A link of another type, such as IsVariantFormOf, does not count.
+The key is the record that should carry the link. Copies given for one version hold for the version that is checked, so a new version that lost the link is found.
+
 ## What is sent where
 
 The ORCID iD and the DOIs are sent, and nothing else. No key or account is needed.
@@ -146,11 +164,13 @@ node verification/check.js
 ```
 
 The checks run without the network. The answers of the APIs come from made-up records in `verification/fixtures`.
-The checks break a complete record in 15 ways, one for each rule that reads a single record, and see that each break raises its rule and no other.
+The checks break a complete record in 16 ways, one for each rule that reads a single record, and see that each break raises its rule and no other.
 They run on every push and pull request, and once a week (`.github/workflows/check.yml`).
 They also check the repository itself: no dependencies anywhere, workflows that only read except for the weekly issue, actions pinned to a commit, and no keys, tokens or e-mail addresses in any tracked file.
-`.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary.
-For the author's own iD it also keeps one open issue with the latest report. It comments when the counts change, and the issue closes itself when no error or warning is left. Only this run talks to api.github.com, with the token GitHub gives the run.
+`.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a week, and writes the report to the job summary and to an artifact of the run.
+For the author's own iD it also reads every DOI in the catalogue of the author’s works (`catalog.json` in cpsbvbng26-dotcom, read from GitHub), with the type and the copies elsewhere that the catalogue gives each work (`scripts/catalog-inputs.js`).
+It keeps one open issue with the latest report, and the findings of that report. When the findings change, it comments with the ones that are gone and the ones that are new. The issue closes itself when no error or warning is left.
+The run commits nothing. Only this run talks to api.github.com, with the token GitHub gives the run, and it may write issues and nothing else.
 
 ## Citing
 
@@ -199,6 +219,8 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - 各 DOI の登録情報を DataCite・Crossref・JaLC から読み、上の表の規則で点検します。
 - 報告は Markdown か JSON で出します。
 - 稿ごとに意図した種類を JSON の表で渡すと、登録した種類（DataCite の `resourceTypeGeneral`）との食い違いを知らせます。
+- 同じ本文の写し（SSRN など）を JSON の表で渡すと、IsIdenticalTo で結ばれていない組を知らせます。片方の記録が相手を指していれば足ります。
+- 毎週の実行は、著者の業績の目録（cpsbvbng26-dotcom の `catalog.json`）にあるすべての DOI も読みます。前の報告から指摘が変わると、消えた指摘と新しい指摘を issue に書きます。リポジトリには何もコミットしません。
 - 依存はありません。Node.js の標準ライブラリだけで動きます。網に出ずに一分で試せる見本が `examples/` にあります。
 - どこにも何も書き込みません。送るのは ORCID iD と DOI だけで、鍵もアカウントも要りません。
 

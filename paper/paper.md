@@ -25,7 +25,7 @@ bibliography: paper.bib
 deposit-check reads the DOI metadata of a researcher's works and reports what is missing or inconsistent.
 Given an ORCID iD [@orcid], it gathers the works on the public ORCID record and the works whose DataCite [@datacite] or Crossref [@crossref] metadata carries the iD.
 It reads the metadata of each DOI from DataCite, Crossref or JaLC [@jalc], and checks how OpenAlex [@openalex] holds each work.
-It then applies eighteen rules and writes a report in Markdown or JSON, with what to change at the repository for each finding.
+It then applies nineteen rules and writes a report in Markdown or JSON, with what to change at the repository for each finding.
 It runs from the command line or as a GitHub Action, needs no key, and writes nothing anywhere.
 
 # Statement of need
@@ -54,7 +54,7 @@ Only one module reaches the network. It makes GET requests one at a time, retrie
 The metadata of each agency is read into one shape. Each rule is a pure function of one record or of the whole set, with a severity and a fix.
 The versions of one work are read together: only the latest version is checked, and a work missing from the ORCID record is reported once.
 The checks run without the network, on made-up records that use test DOI prefixes and the example iD that ORCID documents. Each check was broken once on purpose, to see that it fails.
-A weekly run keeps one issue with the latest report for the author's own iD, and comments when the counts change.
+A weekly run reads the author's own iD and every DOI in the catalogue of the author's works. It keeps one issue with the latest report, and comments with the findings that are gone and the ones that are new.
 
 # Research impact statement
 
