@@ -52,6 +52,16 @@ Terms of use are works, so only the phrases relied on are quoted here.
 | Calls to JaLC | JaLC pages (top, metadata, FAQ) | The fetched pages describe membership and DOI registration. No terms for the public API were found on them | The tool reads public metadata only | Insufficient basis | Kept. The API terms are listed as not fetched below |
 | paper/ and JOSS | JOSS policies and paper page | Authors of JOSS papers retain copyright, and papers are under CC BY 4.0 ("papers retain copyright") | The repository's text is under CC BY 4.0 and the author keeps the copyright | No problem | None |
 
+## 2026-11-12 の続き：二度目の見落とし
+
+On the same day, another read-only pass was made by a different hand. It found what the sections above had missed.
+The earlier rows are a record of what was checked at the time, so they are kept.
+The statute is quoted from the fetched text copied into `verification/statutes.json` in cpsbvbng26-dotcom.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| SECURITY.md | Civil Code Article 709 | The fetched text: 「故意又は過失によって他人の権利又は法律上保護される利益を侵害した者は、これによって生じた損害を賠償する責任を負う」. A channel that does not exist must not be promised to someone who relies on it | SECURITY.md promised GitHub's private vulnerability reporting. On 2026-11-12 the GitHub API returned `enabled: false` for this repository. It is a repository setting, and Claude has no tool that changes it | Error | Rewritten: security issues are received at the email address on the operator's ORCID record, and GitHub's private reporting is stated to be not enabled, with the date it was checked. The text is the same in the ten repositories and here; `check_ecosystem.js` (12j) in cpsbvbng26-dotcom checks it. Claude decided this on 2026-11-12 (2026-11-12 に Claude が決めました), because the only channel that exists is the one the disclaimer already uses |
+
 ## Laws checked
 
 - 著作権法 (Copyright Act: Art. 2, 21)
