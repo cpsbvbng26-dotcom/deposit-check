@@ -21,6 +21,13 @@
     利用者のアカウントでしか触れないもの（Zenodo・OSF・SSRN・ORCID・Wikidata・GitHub の設定など）で
     Claude に触れられないことは、触れられないという事実だけを書き、誰にも振らない。
     利用者が自分から手順を求めたときだけ、手順を書く。2026-11-12 に利用者が決めた。
+12. **issue の中身を言語モデルに渡すのは、本人の同意がある題と本文だけにする。**
+    誤りの知らせの様式（`error-report.yml`）は、10 のリポジトリと同じ必須の同意の欄を持ち、
+    cpsbvbng26-dotcom の `DISCLAIMER.md`「issue の中身と言語モデル」の節がこのリポジトリの issue にも掛かる。
+    読み方は 10 のリポジトリの CLAUDE.md の決めごと 17 と同じ。`search_issues` に同意の欄の英語の文を引用符で囲んで渡し、
+    出てきた issue の題と本文だけを読む。`list_issues` で一覧を取らない。コメントは読まない。
+    不具合の報告の様式（`bug_report.yml`）には同意の欄が無いので、その issue は読まない。
+    利用者が開いた issue は、この限りではない。2026-11-13 に Claude が決めた。
 
 ```
 node verification/check.js
