@@ -211,6 +211,17 @@ Claude is not an author. Each commit records the use.
 | --- | --- | --- |
 | Claude Code (Anthropic) | The code, the checks, this README and `docs/` | The author (the design and the rules), and `verification/check.js` |
 
+## Statement of Purpose
+
+<!-- statement:start -->
+This repository is covered by the [Statement of Purpose](https://cpsbvbng26-dotcom.vercel.app/notes/mission.en.html) of Takuya Nemoto.
+The statement sets out how the operator approaches running these places. By itself it creates no right or obligation for the operator, for readers or for anyone else.
+What applies is this repository's licence and, for the repositories listed in the [Disclaimer](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/DISCLAIMER.en.md), that Disclaimer. Where the statement and they differ, they prevail.
+The operator has not, at present, retained a lawyer or other professional. The statement and the Disclaimer have not been reviewed by a lawyer.
+If a dispute arises, the operator will respond after consulting a lawyer or other professional where needed, following the laws of Japan (including their rules on international jurisdiction and on the governing law). This is not a warning to anyone.
+The full text is on [the site](https://cpsbvbng26-dotcom.vercel.app/notes/mission.en.html) and in [docs/mission.en.md](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/docs/mission.en.md) of cpsbvbng26-dotcom.
+<!-- statement:end -->
+
 ## 日本語
 
 deposit-check は、研究者の業績の DOI の登録情報（メタデータ）を読み、欠けているものや食い違っているものを挙げる道具です。
@@ -236,5 +247,16 @@ Journal of Open Source Software（JOSS）への投稿を計画しています。
 コードは MIT、文書は CC BY 4.0 です。
 このリポジトリが引き、または引用を確かめるために置いている他人の文は、CC BY 4.0 でも MIT でも許諾しておらず、それぞれの権利者のものです。
 コードと検査と文書は、言語モデル Claude Code（Anthropic）を使って書きました。設計と規則は著者が決め、出力を確かめ、責任を負います。Claude は著者ではありません。
+
+### 運営理念・声明
+
+<!-- 声明:ここから -->
+このリポジトリには、根本卓哉の[運営理念・声明](https://cpsbvbng26-dotcom.vercel.app/notes/mission.html)が掛かります。
+声明は、運営の考え方を述べたものです。それ自体で、運営者にも、読む人その他の誰にも、権利や義務を生じさせません。
+適用されるのは、このリポジトリのライセンスと、[免責事項](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/DISCLAIMER.md)が挙げるリポジトリではその免責事項です。声明とそれらが食い違うときは、それらが優先します。
+運営者は、現在、弁護士その他の専門家に依頼していません。声明と免責事項は、弁護士の確認を受けていません。
+紛争が生じたときは、運営者は、必要に応じて弁護士その他の専門家に相談したうえで、日本の法令（国際的な事件の裁判管轄と準拠法についての定めを含む）に沿って対応します。これは、誰かに対する警告ではありません。
+全文は、[サイトの頁](https://cpsbvbng26-dotcom.vercel.app/notes/mission.html)と、cpsbvbng26-dotcom の [docs/mission.md](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/docs/mission.md) にあります。
+<!-- 声明:ここまで -->
 
 © 2026 Takuya Nemoto ([ORCID 0009-0000-1406-0547](https://orcid.org/0009-0000-1406-0547))
