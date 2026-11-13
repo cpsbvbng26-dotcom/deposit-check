@@ -603,6 +603,55 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ];
   ok('break on purpose: a new workflow, a removed one, a dropped row, a word of the quotation, a weekly run again, the heading (' + wpBroken.filter((b) => b.length).length + ' / ' + wpBroken.length + ')', wpBroken.every((b) => b.length > 0));
 
+  console.log('\n18. The bug report form asks for your own DOI or iD, never someone else\'s (2026-11-13)');
+  /* The sixteenth read-only pass found that the form asked for the DOIs or the ORCID iD the tool was run on, and for its
+   * output pasted as it is, and said that a DOI may be named because its metadata is public. The metadata of a DOI names its
+   * authors, and the output lists what is missing or wrong in their records. Claude decided on 2026-11-13: the form asks for
+   * a reproduction on the reporter's own DOI or iD, and, for someone else's record, a description without its DOI or iD and
+   * without the tool's findings about it. The example names no real DOI or iD. */
+  const SIXTEENTH = '\n## 2026-11-13：十六度目の見落とし\n';
+  const OWN = 'Show the problem on your own DOI or ORCID iD where you can: name it, and paste what the tool printed.';
+  const OTHER = "If the record that shows the problem belongs to someone else, describe the problem (the rule, the field and what was expected) without naming its DOI or iD, and without pasting what the tool found about that person's record.";
+  const OWN_C = "Show it on a DOI of your own work, if you can. If the deposit is someone else's, describe the problem without naming its DOI, and without pasting what the tool found about it.";
+  const formProblems = (form, contrib, audit) => {
+    const bad = [];
+    if (!form.includes(OWN) || !form.includes(OTHER)) bad.push('the form does not limit a reproduction to your own DOI or iD');
+    if (!/Paste the output as it is only if the run was on your own DOI or iD; otherwise describe it\./.test(form)) bad.push('the output field asks for any output');
+    if (!/Name the DOIs or the ORCID iD it was run on only if they are your own\./.test(form)) bad.push('the steps field asks for any DOI or iD');
+    if (/\b10\.\d{4,9}\/[^\s<>]+|\b\d{4}-\d{4}-\d{4}-\d{3}[\dX]\b/.test(form)) bad.push('the form holds a DOI or an iD of real shape');
+    if (/helps most|so it can be named here|Give a DOI that shows it/.test(form + contrib)) bad.push('an invitation to name a DOI is back');
+    if (!contrib.includes(OWN_C)) bad.push('CONTRIBUTING.md does not limit the DOI to your own work');
+    const i = audit.indexOf(SIXTEENTH);
+    const j = i < 0 ? -1 : audit.indexOf('\n## ', i + SIXTEENTH.length);
+    const sec = i < 0 ? '' : audit.slice(i, j < 0 ? audit.length : j);
+    if (!sec || audit.indexOf('\n## Laws checked\n') < i) bad.push('no sixteenth section before the laws checked');
+    const rows = sec.split('\n').filter((l) => l.startsWith('| ') && !l.startsWith('| Place |') && !l.startsWith('| --- |')).map((l) => l.slice(2, -2).split(' | '));
+    if (rows.length < 3 || rows.some((r) => r.length !== 6 || !['Error', 'Insufficient basis', 'Omission', 'Wording', 'No problem'].includes(r[4]))) bad.push('the shape of the sixteenth table');
+    const kinds = ['Error', 'Insufficient basis', 'Omission', 'Wording', 'No problem'];
+    const m = /Findings in this table: ([^.]+)\./.exec(sec);
+    const said = m ? Object.fromEntries(m[1].split(', ').map((x) => { const k = x.replace(/ \d+$/, ''); return [k, Number(x.slice(k.length + 1))]; })) : {};
+    if (!m || !kinds.every((k) => (said[k] || 0) === rows.filter((r) => r[4] === k).length)) bad.push('the count of findings');
+    if (rows.some((r) => r[4] !== 'No problem' && !r[5].includes('Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました)'))) bad.push('a decision without its maker');
+    if (!sec.includes('No lawyer has reviewed this section.')) bad.push('the sentence on the lawyer');
+    return bad;
+  };
+  const formText = read('.github/ISSUE_TEMPLATE/bug_report.yml');
+  const fp = formProblems(formText, contributing, auditText);
+  ok('the bug report form asks for a reproduction on your own DOI or iD, and for someone else\'s record a description without its DOI or iD or the findings about it; CONTRIBUTING.md says the same; the sixteenth section of the audit is complete', fp.length === 0, fp.join(', '));
+  const fpBroken = [
+    formProblems(formText.replace(OWN, 'A DOI that shows the problem helps most. The metadata of a DOI is public, so it can be named here.'), contributing, auditText),
+    formProblems(formText.replace(OTHER, ''), contributing, auditText),
+    formProblems(formText.replace(' only if the run was on your own DOI or iD; otherwise describe it.', '.'), contributing, auditText),
+    formProblems(formText.replace('. Name the DOIs or the ORCID iD it was run on only if they are your own.', ', and the DOIs or the ORCID iD it was run on.'), contributing, auditText),
+    formProblems(formText.replace('<your own DOI>', '10.' + '5281/zen' + 'odo.1234567'), contributing, auditText),
+    formProblems(formText.replace('<your own DOI>', '--orcid 0000-0002-1825-0097'), contributing, auditText),
+    formProblems(formText, contributing.replace(OWN_C, 'Give a DOI that shows it, if you can.'), auditText),
+    formProblems(formText, contributing, auditText.replace(SIXTEENTH, '\n## Sixteenth\n')),
+    formProblems(formText, contributing, auditText.replace(/(## 2026-11-13：十六度目の見落とし[\s\S]*?Findings in this table: [^.]*?)(\d+)\./, (_, a, n) => a + (Number(n) + 1) + '.')),
+    formProblems(formText, contributing, auditText.replace(/(## 2026-11-13：十六度目の見落とし[\s\S]*?)No lawyer has reviewed this section\./, '$1')),
+  ];
+  ok('break on purpose: the old invitation, the sentence for someone else\'s record, the output field, the steps field, a DOI or an iD in the example, the old line of CONTRIBUTING.md, the heading, the count, the lawyer (' + fpBroken.filter((b) => b.length).length + ' / ' + fpBroken.length + ')', fpBroken.every((b) => b.length > 0));
+
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
   console.log(pass + ' checks passed.');

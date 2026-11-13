@@ -124,6 +124,34 @@ Findings in this table: Wording 2, No problem 1.
 
 No lawyer has reviewed this section.
 
+## 2026-11-13：十六度目の見落とし
+
+A sixteenth read-only pass was made on 2026-11-13, Japan time. It found what the sections above had missed.
+The earlier rows are a record of what was checked at the time, so they are kept.
+The bug report form asked for the DOIs or the ORCID iD the tool was run on, and for its output pasted as it is.
+Its opening said: “A DOI that shows the problem helps most. The metadata of a DOI is public, so it can be named here.”
+The example in the steps field named a DOI of real shape at Zenodo.
+`CONTRIBUTING.md` said, for a rule that is wrong or missing: “Give a DOI that shows it, if you can.”
+The metadata of a DOI names its authors, and the tool's output lists what is missing or wrong in their records.
+So the form invited anyone to post someone else's DOI or iD in a public issue, with findings about that person's records.
+Article 2(1) of the Act on the Protection of Personal Information (the text in `verification/statutes.json` of cpsbvbng26-dotcom, “個人情報保護法 第2条”) says: 「この法律において「個人情報」とは、生存する個人に関する情報であって、次の各号のいずれかに該当するものをいう。」
+Its first item names information that can identify a specific individual by a name or other description, including 「他の情報と容易に照合することができ、それにより特定の個人を識別することができることとなるもの」.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| `.github/ISSUE_TEMPLATE/bug_report.yml`, the opening and the fields “What happened” and “Steps to reproduce” | 個人情報保護法第2条第1項 (Act on the Protection of Personal Information, Art. 2(1)) | The form does not ask for someone else's identifiers, or for findings about that person's records, in a public issue | It asked for the DOIs or the iD the tool was run on and for the output as it is, and said that a DOI may be named because its metadata is public | Omission | The form now asks for a reproduction on the reporter's own DOI or iD. If the record that shows the problem belongs to someone else, it asks for a description of the problem (the rule, the field and what was expected) without its DOI or iD, and without what the tool found about that person's record. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that no one's records are listed by name, with their gaps, in a public issue because of this form |
+| `.github/ISSUE_TEMPLATE/bug_report.yml`, the example in “Steps to reproduce” | none | The example names no real record | It named a Zenodo DOI of real shape; whose record it is was not checked | Wording | The example is now `<your own DOI>`. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that the example points to no one's record |
+| `CONTRIBUTING.md`, the row for a rule that is wrong or missing | 個人情報保護法第2条第1項 (Act on the Protection of Personal Information, Art. 2(1)) | The same | It said “Give a DOI that shows it, if you can.” | Omission | It now asks for a DOI of the reporter's own work, and, for someone else's deposit, a description without its DOI and without what the tool found about it. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). For the same reason as the form |
+| `.github/ISSUE_TEMPLATE/error-report.yml` | 個人情報保護法第2条第1項 (Act on the Protection of Personal Information, Art. 2(1)) | The same | The DOI it asks for is that of something published here, and the basis it asks for is a source, a command and its output, or a reference | No problem | None |
+| The check (`verification/check.js`) | none | The change is pinned by a check | There was none | Omission | Added (18): the form and `CONTRIBUTING.md` carry the sentences above, the form holds no DOI or iD of real shape, the old invitation is gone, and this section is complete; each part is broken on purpose. `check_ecosystem.js` (12v) in cpsbvbng26-dotcom reads the issue forms of all 13 repositories the same way. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that the invitation cannot come back with a new form |
+
+Findings in this table: Omission 3, Wording 1, No problem 1.
+
+The issues opened in this repository before the change were not read for this section.
+This change narrows what the form asks for. It narrows no right and adds no duty.
+
+No lawyer has reviewed this section.
+
 ## Laws checked
 
 - GitHub Terms of Service (section I) and GitHub Additional Product Terms (section on Actions), fetched from `github/site-policy` on 2026-11-13
