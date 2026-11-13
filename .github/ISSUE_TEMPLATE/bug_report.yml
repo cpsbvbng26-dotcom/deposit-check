@@ -6,12 +6,13 @@ body:
     attributes:
       value: |
         Write in English or Japanese (日本語でも書けます). Issues are public: do not paste personal data.
-        A DOI that shows the problem helps most. The metadata of a DOI is public, so it can be named here.
+        Show the problem on your own DOI or ORCID iD where you can: name it, and paste what the tool printed.
+        If the record that shows the problem belongs to someone else, describe the problem (the rule, the field and what was expected) without naming its DOI or iD, and without pasting what the tool found about that person's record.
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: The finding that is wrong or missing, or the error. Paste the output as it is.
+      description: The finding that is wrong or missing, or the error. Paste the output as it is only if the run was on your own DOI or iD; otherwise describe it.
       render: text
     validations:
       required: true
@@ -25,9 +26,9 @@ body:
     id: steps
     attributes:
       label: Steps to reproduce
-      description: The command, or the inputs of the action, and the DOIs or the ORCID iD it was run on.
+      description: The command, or the inputs of the action. Name the DOIs or the ORCID iD it was run on only if they are your own.
       placeholder: |
-        node bin/deposit-check.js --doi 10.5281/zenodo.1234567
+        node bin/deposit-check.js --doi <your own DOI>
     validations:
       required: true
   - type: input
