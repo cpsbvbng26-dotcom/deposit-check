@@ -152,11 +152,31 @@ This change narrows what the form asks for. It narrows no right and adds no duty
 
 No lawyer has reviewed this section.
 
+## 2026-11-13：十七度目の見落とし
+
+A seventeenth read-only pass was made on 2026-11-13, Japan time. It found that the content of issues reaches a language model.
+The earlier rows are a record of what was checked at the time, so they are kept.
+This repository is worked on with Claude Code, and that work reads the title and text of issues.
+What is read is given to Claude, the language model of Anthropic (United States).
+How this is handled is set out in the section 「issue の中身と言語モデル」 of the disclaimer of cpsbvbng26-dotcom, and in the section of the same heading in the audit record of cpsbvbng26-dotcom.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| `.github/ISSUE_TEMPLATE/error-report.yml` | 個人情報保護法第28条 (Act on the Protection of Personal Information, Art. 28) | The person's consent is obtained before personal data is provided to a third party in a foreign country | The form had no consent box | Omission | A required consent box was added, word for word the same as in the 10 repositories. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that consent is asked when the issue is opened, before anything is given |
+| `CLAUDE.md` | 個人情報保護法第28条 (Act on the Protection of Personal Information, Art. 28) | Content without consent is not given | There was no rule on how issues are read | Omission | Rule 12 was added: issues are found by the English sentence of the consent box and only those are read; no list of issues is taken and no comment is read. Claude decided this on 2026-11-13 (2026-11-13 に Claude が決めました). So that the text of an issue without consent need not be read |
+| `.github/ISSUE_TEMPLATE/bug_report.yml` | 個人情報保護法第28条 (Act on the Protection of Personal Information, Art. 28) | Content without consent is not given | The bug report form has no consent box | No problem | Not changed. Issues from this form are not given to a language model |
+
+Findings in this table: Omission 2, No problem 1.
+
+The error report form can no longer be sent without the consent. A person who does not consent can still report by email, to the address the disclaimer gives.
+
+No lawyer has reviewed this section.
+
 ## Laws checked
 
 - GitHub Terms of Service (section I) and GitHub Additional Product Terms (section on Actions), fetched from `github/site-policy` on 2026-11-13
 - 著作権法 (Copyright Act: Art. 2, 21)
-- 個人情報保護法 (Act on the Protection of Personal Information: Art. 2, 16, 27)
+- 個人情報保護法 (Act on the Protection of Personal Information: Art. 2, 16, 27, 28)
 - 民法 (Civil Code: Art. 709)
 - CC BY 4.0 legal code (Section 3); Zenodo Terms of Use
 - Terms of ORCID (Public APIs), DataCite and the documentation of the DataCite, Crossref and OpenAlex APIs; JaLC pages; JOSS policies
