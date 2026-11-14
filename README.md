@@ -188,6 +188,8 @@ Cite the version you used. `CITATION.cff` gives the citation, and GitHub shows i
 
 Where each kind of contribution goes, and how to check a change, is in [CONTRIBUTING.md](CONTRIBUTING.md). The changes so far are in [CHANGELOG.md](CHANGELOG.md).
 
+Personal information in the issues of this repository is handled as the section "Information" of the [Disclaimer](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/DISCLAIMER.en.md#information) sets out; that section names this repository. It gives the purposes, what the check of a bug report reads from 2026-12-01 (the ORCID iD and the DOI given, not kept), and where a request to disclose, correct, stop using or erase personal information is received.
+
 ## Plans
 
 A submission to the Journal of Open Source Software (JOSS) is planned.
@@ -238,6 +240,9 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 - 月に一度の実行は、著者の業績の目録（cpsbvbng26-dotcom の `catalog.json`）にあるすべての DOI も読みます。前の報告から指摘が変わると、消えた指摘と新しい指摘を issue に書きます。リポジトリには何もコミットしません。
 - 依存はありません。Node.js の標準ライブラリだけで動きます。網に出ずに一分で試せる見本が `examples/` にあります。
 - どこにも何も書き込みません。送るのは ORCID iD と DOI です。連絡先は、与えたときだけ送ります。鍵もアカウントも要りません。
+
+このリポジトリの issue で届いた個人の情報は、[免責事項](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/DISCLAIMER.md#情報の扱い)の「情報の扱い」の節のとおりに扱います。その節は、このリポジトリを名指しています。
+利用の目的、2026-12-01 から不具合の報告の確かめが読むもの（書かれた ORCID iD と DOI。残しません）、開示・訂正・利用の停止・消去の求めを受ける所は、その節にあります。
 
 Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、投稿できるのは最短で 2027-05-03 です。著者以外に使われた記録はまだありません。
 
