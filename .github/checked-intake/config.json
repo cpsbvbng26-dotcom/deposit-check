@@ -1,0 +1,30 @@
+{
+  "from": "2026-12-01",
+  "forms": [
+    {
+      "label": "erratum",
+      "kind": "quote",
+      "where": [
+        "どこか / Where"
+      ],
+      "quote": [
+        "書いてあること / What it says"
+      ]
+    },
+    {
+      "label": "bug",
+      "kind": "identity",
+      "orcid": [
+        "Your ORCID iD"
+      ],
+      "doi": [
+        "Your DOI (optional)"
+      ]
+    }
+  ],
+  "pages": [],
+  "blob": "https://github.com/cpsbvbng26-dotcom/deposit-check",
+  "dois": {},
+  "ids": [],
+  "neverClose": []
+}
