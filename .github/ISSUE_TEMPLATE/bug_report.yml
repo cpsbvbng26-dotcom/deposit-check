@@ -23,6 +23,8 @@ body:
     attributes:
       label: Your DOI (optional)
       description: Only a DOI of your own work, whose metadata lists your ORCID iD for a creator. Leave it empty if the problem is not about one of your deposits.
+    validations:
+      required: false
   - type: textarea
     id: what
     attributes:
