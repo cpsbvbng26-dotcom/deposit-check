@@ -8,6 +8,21 @@ body:
         Write in English or Japanese (日本語でも書けます). Issues are public: do not paste personal data.
         Show the problem on your own DOI or ORCID iD where you can: name it, and paste what the tool printed.
         If the record that shows the problem belongs to someone else, describe the problem (the rule, the field and what was expected) without naming its DOI or iD, and without pasting what the tool found about that person's record.
+
+        From 2026-12-01, this form is checked by the checked intake (突き合わせの受付). The ORCID iD given below must be your own: its public ORCID record must link the GitHub account that opens this issue (add `https://github.com/<your username>` under "Websites & social links"). If you give a DOI, its metadata at DataCite or Crossref must list that iD for a creator. If either check fails, the issue is closed with a fixed comment, and a new issue can be opened. If it passes, the label "identity verified" is added; a person still reads the report.
+        The check reads only the websites of that ORCID record and the creators of that DOI, and writes nothing from them anywhere.
+  - type: input
+    id: orcid
+    attributes:
+      label: Your ORCID iD
+      description: Required from 2026-12-01. Your own iD, in the form of sixteen digits in four groups. Its public record must link the GitHub account that opens this issue.
+    validations:
+      required: false
+  - type: input
+    id: doi
+    attributes:
+      label: Your DOI (optional)
+      description: Only a DOI of your own work, whose metadata lists your ORCID iD for a creator. Leave it empty if the problem is not about one of your deposits.
   - type: textarea
     id: what
     attributes:
