@@ -209,9 +209,14 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const wfFiles = fs.readdirSync(path.join(ROOT, '.github', 'workflows'));
   const wf = (f) => read(path.join('.github', 'workflows', f));
   /* The top level only reads. The monthly run writes its issue from its one job, and nowhere else. */
-  ok('every workflow only reads, except that the job of the monthly run may write issues; inputs go through the environment',
-    wfFiles.length >= 2 && wfFiles.every((f) => /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f))
-      && (f !== 'run.yml' || /^    permissions:\n      contents: read\n      issues: write\n(?!      \w)/m.test(wf(f))) && onlyInEnv(wf(f))));
+  /* 2026-11-14: the checked intake (checked-intake.yml) is the same file in the 13 repositories, and check_ecosystem.js in
+   * cpsbvbng26-dotcom pins it. Its top level reads and writes issues, and its one expression outside the environment is the
+   * group of its concurrency, by issue number. Nothing else is allowed to it. */
+  const INTAKE_GROUP = '  group: checked-intake-${{ github.event.issue.number || github.ref }}';
+  ok('every workflow only reads, except that the job of the monthly run may write issues, and the checked intake writes issues; inputs go through the environment',
+    wfFiles.length >= 2 && wfFiles.every((f) => (f === 'checked-intake.yml' ? /^permissions:\n  contents: read\n  issues: write\n(?!  \w)/m.test(wf(f)) && !/^ +permissions:/m.test(wf(f)) : /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f)))
+      && (f !== 'run.yml' || /^    permissions:\n      contents: read\n      issues: write\n(?!      \w)/m.test(wf(f)))
+      && onlyInEnv(f === 'checked-intake.yml' ? wf(f).split('\n').filter((l) => l !== INTAKE_GROUP).join('\n') : wf(f))));
   const cff = read('CITATION.cff');
   ok('CITATION.cff names one author with an ORCID iD, and no language model', (cff.match(/family-names:/g) || []).length === 1 && cff.includes('orcid: "https://orcid.org/0009-0000-1406-0547"') && !/claude|anthropic|openai|gpt/i.test(cff));
   /* Zenodo reads .zenodo.json before CITATION.cff, so the disclosure has to be in it too. */
@@ -460,7 +465,8 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('every workflow sets permissions at the top level', workflows.length > 0 && noTop.length === 0, noTop.join(', '));
   /* The only write is the issue of the monthly run, in run.yml. Any other write fails here. */
   const writes = workflows.flatMap((f) => [...read(f).matchAll(/^\s+([a-z-]+):\s*write\b/gm)].map((m) => path.basename(f) + ':' + m[1]));
-  ok('the only write permission is issues: write, given to the job in run.yml', writes.join() === 'run.yml:issues'
+  /* 2026-11-14: the checked intake (checked-intake.yml, the same file in the 13 repositories) labels and closes issues, so it writes to issues too. */
+  ok('the only write permission is issues: write, given to the job in run.yml and to the checked intake', writes.sort().join() === 'checked-intake.yml:issues,run.yml:issues'
     && /^permissions:\n  contents: read\n/m.test(read('.github/workflows/run.yml')), writes.join(', '));
   const uses = workflows.concat(['action.yml']).flatMap((f) => [...read(f).matchAll(/^\s*(?:-\s+)?uses:\s*(\S+)(.*)$/gm)].map((m) => [f, m[1], m[2]])).filter(([, u]) => !u.startsWith('./'));
   const loose = uses.filter(([, u, rest]) => !/^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/.test(u) || !/^\s+#\s*\S+/.test(rest));
