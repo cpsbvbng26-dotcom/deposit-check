@@ -20,9 +20,14 @@ function httpGet({ mailto = process.env.DEPOSIT_CHECK_MAILTO, wait = pause } = {
   return async function get(url, accept = 'application/json') {
     for (let attempt = 0; ; attempt++) {
       await wait(GAP_MS);
-      const r = await fetch(url, { headers: { 'User-Agent': ua, Accept: accept } });
+      /* An answer that does not come within a minute, or cannot be read as JSON, is an error: the DOI is reported as not checked (2026-11-15). */
+      let r;
+      try { r = await fetch(url, { headers: { 'User-Agent': ua, Accept: accept }, signal: AbortSignal.timeout(60000) }); } catch (e) {
+        if (attempt < RETRY_WAITS_MS.length) { await wait(RETRY_WAITS_MS[attempt]); continue; }
+        throw new Error(url.split('?')[0] + ': ' + (e.name === 'TimeoutError' ? 'no answer within a minute' : 'the request failed'));
+      }
       if (r.status === 404) return null;
-      if (r.ok) return r.json();
+      if (r.ok) { try { return await r.json(); } catch (e) { throw new Error(url.split('?')[0] + ': the answer could not be read'); } }
       if ((r.status === 429 || r.status >= 500) && attempt < RETRY_WAITS_MS.length) { await wait(RETRY_WAITS_MS[attempt]); continue; }
       throw new Error(url.split('?')[0] + ': HTTP ' + r.status);
     }
