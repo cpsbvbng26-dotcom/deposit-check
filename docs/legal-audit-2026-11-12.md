@@ -197,6 +197,27 @@ Findings in this table: No problem 4.
 
 No lawyer has reviewed this section.
 
+## 2026-11-15：十八度目の点検
+
+The tables above are kept as they were written.
+On 2026-11-15, an eighteenth read-only pass found what the checked intake of 2026-11-14 had missed.
+Claude decided the fixes on 2026-11-15 (2026-11-15 に Claude が決めました), so that all of them are in place before the checked intake takes effect on 2026-12-01.
+Every fix widens the position of the people who report, or leaves it as it was; none narrows it, so each takes effect on publication.
+The script and the workflow stay the same files in the 13 repositories, and `verification/check_ecosystem.js` in cpsbvbng26-dotcom checks that every copy is the same and that none of them can close or lock an issue.
+The articles quoted are those in `verification/statutes.json` of cpsbvbng26-dotcom.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| The words of `.github/checked-intake/verify.js`, and the row "Requests that the checked intake never closes" of the section of 2026-11-14 | 個人情報保護法第34条第2項 (Act on the Protection of Personal Information, Art. 34(2)) | 「遅滞なく必要な調査を行い、その結果に基づき、当該保有個人データの内容の訂正等を行わなければならない。」 | The pass found phrasings that the list of words missed, such as "Please take this down" and "The author list misspells my surname", and requests in languages other than Japanese and English. While a way to close remained, a request could be closed. The row of 2026-11-14 judged this "No problem"; that was wrong | Error | The checked intake never closes or locks an issue. A claim that fails gets only the label "not verified" and a fixed comment. The list of words gains the phrasings found, and serves only as a signal, the label "needs a person". Claude decided this on 2026-11-15 (2026-11-15 に Claude が決めました), because a list of words cannot tell every request that the law requires to be received and handled |
+| Reopened issues | none (the checked intake) | The intake does not close again an issue that the owner reopened | The intake of 2026-11-14 checked a reopened issue again without looking at who reopened it, and closed it again if the claim failed | Omission | When the sender of the event is the owner of the repository, the intake does nothing. The owner is read from the event file (sender and repository.owner), never from the issue text. "needs a person" is added to neverClose in the configuration. Claude decided this on 2026-11-15 (2026-11-15 に Claude が決めました), so that a machine does not close what a person reopened |
+| `.github/ISSUE_TEMPLATE/error-report.yml`, `.github/ISSUE_TEMPLATE/bug_report.yml` and `CONTRIBUTING.md` | none (wording) | The pages say what the intake does | The forms and CONTRIBUTING.md said that a failed claim is closed | Wording | They now say that no issue is closed, that a failed claim gets a label and a fixed comment, and that editing the issue or opening a new one runs the check again. Claude decided this on 2026-11-15 (2026-11-15 に Claude が決めました), so that a reader learns what the intake does |
+| The checking of who reports a bug (`bug_report.yml`), from 2026-12-01 | 個人情報保護法第32条第1項 (Act on the Protection of Personal Information, Art. 32(1)) | 「個人情報取扱事業者は、保有個人データに関し、次に掲げる事項について、本人の知り得る状態（本人の求めに応じて遅滞なく回答する場合を含む。）に置かなければならない。」 | From 2026-12-01 the intake reads the reporter's ORCID iD and links it to the GitHub account. No document covering deposit-check gave the purposes and how a request is received: the Disclaimer of cpsbvbng26-dotcom covered the 10 repositories and did not name this one | Omission | The section "Information" of the Disclaimer (Japanese and English) now names deposit-check, adds checking who reports a bug to the purposes, and says what is read (the links section of the ORCID record and the creators' iDs in the DOI metadata) and that nothing of it is kept. The README and the bug report form point to that section. Claude decided this on 2026-11-15 (2026-11-15 に Claude が決めました), so that the purposes and the way to ask are known before anything is read |
+| When these fixes take effect | none (the day of effect) | A change that narrows a position is shown ahead | Not closing widens the position of the people who report; the day 2026-12-01 is unchanged | No problem | They take effect on publication. Claude decided this on 2026-11-15 (2026-11-15 に Claude が決めました), because a change that widens a position needs no wait |
+
+Findings in this table: Error 1, Omission 2, Wording 1, No problem 1.
+
+No lawyer has reviewed this section.
+
 ## Laws checked
 
 - GitHub Terms of Service (section I) and GitHub Additional Product Terms (section on Actions), fetched from `github/site-policy` on 2026-11-13
