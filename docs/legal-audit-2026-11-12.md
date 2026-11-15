@@ -218,6 +218,26 @@ Findings in this table: Error 1, Omission 2, Wording 1, No problem 1.
 
 No lawyer has reviewed this section.
 
+## 2026-11-15：自動化を固める
+
+The tables above are kept as they were written.
+On 2026-11-15, a read-only audit of the workflows of the 13 repositories looked for ways to hijack them and for ways they could stop without anyone noticing, and a second read-only pass of the same day added more.
+The holes were put to the owner as questions; 2026-11-15 に利用者が決め、Claude が書きました (the owner decided on 2026-11-15, and Claude wrote it).
+No change narrows the position of anyone who reports, so each takes effect on publication.
+How GitHub runs concurrent jobs, and whether GitHub stops the schedule of a repository without activity, were not read in GitHub's documentation (unverified); the design is correct whichever way they behave.
+The recommended rules for the branch `main` of the 13 repositories are set out in the record of cpsbvbng26-dotcom, in the section of the same title; their state cannot be read from here.
+
+| Place | Law and article | Requirements | Facts | Finding | Action |
+| --- | --- | --- | --- | --- | --- |
+| `src/fetch.js` and `scripts/weekly-issue.js` (the monthly run) | none (the monthly run) | What could not be checked is never reported as checked | A DOI whose answer was 429, 5xx, a time-out or not JSON was left out of the report; if nothing else was found, the issue said that no error or warning was left and closed. A request could wait without a limit | Error | A DOI that could not be read is a finding of its own, "not checked": it is named in the issue, keeps it open, and fails the run. An answer that does not come within a minute is an error. 2026-11-15 に利用者が決め、Claude が書きました (decided by the owner and written by Claude on 2026-11-15), so that nothing unchecked reads as checked |
+| `.github/workflows/checked-intake.yml` and `.github/checked-intake/verify.js` (the same files in 13 repositories) | none (the checked intake) | A run that does not check never cancels one that does; the words of a request are found however they are written | The group of concurrency was set on the whole workflow, so a run for an event of the owner could cancel a check. The words were matched as written, not on NFKC | Omission | The group is set on the checking job only, and a run that does not check gets a group of its own. The words are matched on NFKC, without hidden characters and with spaces taken out. 2026-11-15 に利用者が決め、Claude が書きました (decided by the owner and written by Claude on 2026-11-15), so that a cancelled run loses nothing |
+| Every job of every workflow, and every checkout | none (the automation) | A job that hangs stops; a job that does not push keeps no token | Most jobs had no time limit, and the checkouts kept their token | Omission | Every job has `timeout-minutes` of 60 or less, and every checkout keeps no token (`persist-credentials: false`); this repository's check counts it. 2026-11-15 に利用者が決め、Claude が書きました (decided by the owner and written by Claude on 2026-11-15), so that a stopped job shows as stopped |
+| The heartbeat and its mirror | none (the risk that is left) | The risk that is left is written down | The heartbeat of cpsbvbng26-dotcom, which watches the monthly run, and its mirror both run as GitHub Actions; if Actions stops for the account, both stop | No problem | No outside monitor is added, and the risk is recorded here. 2026-11-15 に利用者が決め、Claude が書きました (decided by the owner and written by Claude on 2026-11-15), because an outside monitor needs another account and money |
+
+Findings in this table: Error 1, Omission 2, No problem 1.
+
+No lawyer has reviewed this section.
+
 ## Laws checked
 
 - GitHub Terms of Service (section I) and GitHub Additional Product Terms (section on Actions), fetched from `github/site-policy` on 2026-11-13

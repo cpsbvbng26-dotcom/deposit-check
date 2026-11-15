@@ -13,6 +13,9 @@
  * - errors or warnings, and an open issue: replace its report, and comment when the findings changed, naming the ones
  *   that are gone and the ones that are new (an edit sends no notification, a comment does);
  * - neither, and an open issue: comment and close it.
+ * A DOI that could not be read (429, 5xx, a time-out, an answer that cannot be read) is a finding of its own, "not checked":
+ * it keeps the issue open, the run says so, and the run fails. The run never says that it found no error or warning while
+ * a DOI was not checked (2026-11-15).
  */
 
 const fs = require('fs');
@@ -31,6 +34,8 @@ const countsOf = (body) => {
   return m ? JSON.parse(m[1]) : null;
 };
 const say = (c) => c.error + ' errors, ' + c.warning + ' warnings, ' + c.info + ' notes';
+/* Pure: whether the run fails: when a DOI could not be read. */
+const notChecked = (report) => (report.failed || []).length;
 
 /* Each finding as its rule and its DOI, sorted. Two findings of one rule on one DOI (two copies unlinked) are kept twice. */
 const keysOf = (report) => (report.findings || []).map((f) => f.rule + ' ' + f.doi).sort();
@@ -54,13 +59,15 @@ const named = (title, list) => (list.length ? '\n\n' + title + ':\n' + list.slic
  * commit of the catalogue when its DOIs were read. */
 function plan(open, report, md, when, catalogue) {
   const c = report.counts;
-  const attention = c.error + c.warning > 0;
-  const title = 'Deposit check: ' + c.error + ' errors, ' + c.warning + ' warnings';
-  const keys = keysOf(report);
+  const unread = (report.failed || []).length;
+  const attention = c.error + c.warning + unread > 0;
+  const title = 'Deposit check: ' + c.error + ' errors, ' + c.warning + ' warnings' + (unread ? ', ' + unread + ' not checked' : '');
+  const keys = keysOf(report).concat((report.failed || []).map((f) => 'not-checked ' + f.doi).sort());
   const kept = JSON.stringify(keys);
   const head = MARK + '\n<!-- counts: ' + JSON.stringify(c) + ' -->\n<!-- findings-sha256: ' + digest(keys) + ' -->\n'
     + (kept.length <= KEEP ? '<!-- findings: ' + kept + ' -->\n' : '')
-    + '**Monthly run, ' + when + '.** This issue is updated each month, and closes itself when no error or warning is left.'
+    + '**Monthly run, ' + when + '.** This issue is updated each month, and closes itself when no error or warning is left and every DOI could be read.'
+    + (unread ? ' ' + unread + ' DOIs could not be read this time (not checked); they are tried again next month, and until then this issue stays open and the run fails.' : '')
     + (catalogue ? ' Every DOI in `catalog.json` of cpsbvbng26-dotcom, at ' + catalogue + ', was read as well.' : '') + '\n\n';
   /* GitHub takes a body of 65536 characters at most: the report gets what the head leaves. */
   const room = Math.min(LIMIT, MAX - head.length);
@@ -107,8 +114,9 @@ async function main([jsonFile, mdFile]) {
     console.log('closed #' + p.number);
   }
   if (p.kind === 'none') console.log('nothing to report, no issue open');
+  if (notChecked(report)) throw new Error(notChecked(report) + ' DOIs could not be read; the issue says which');
 }
 
 if (require.main === module) main(process.argv.slice(2)).catch((e) => { console.error(e.message); process.exit(1); });
 
-module.exports = { plan, MARK, LIMIT, MAX, KEEP, NAME, countsOf, keysOf, keptOf, digest, minus };
+module.exports = { plan, notChecked, MARK, LIMIT, MAX, KEEP, NAME, countsOf, keysOf, keptOf, digest, minus };

@@ -212,7 +212,8 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   /* 2026-11-14: the checked intake (checked-intake.yml) is the same file in the 13 repositories, and check_ecosystem.js in
    * cpsbvbng26-dotcom pins it. Its top level reads and writes issues, and its one expression outside the environment is the
    * group of its concurrency, by issue number. Nothing else is allowed to it. */
-  const INTAKE_GROUP = '  group: checked-intake-${{ github.event.issue.number || github.ref }}';
+  /* 2026-11-15: the group moved to the checking job, with a group of its own for a run that does not check. */
+  const INTAKE_GROUP = "      group: ${{ (github.event_name == 'issues' && github.event.sender.login != github.repository_owner) && format('checked-intake-issue-{0}', github.event.issue.number) || format('checked-intake-run-{0}', github.run_id) }}";
   ok('every workflow only reads, except that the job of the monthly run may write issues, and the checked intake writes issues; inputs go through the environment',
     wfFiles.length >= 2 && wfFiles.every((f) => (f === 'checked-intake.yml' ? /^permissions:\n  contents: read\n  issues: write\n(?!  \w)/m.test(wf(f)) && !/^ +permissions:/m.test(wf(f)) : /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f)))
       && (f !== 'run.yml' || /^    permissions:\n      contents: read\n      issues: write\n(?!      \w)/m.test(wf(f)))
@@ -657,6 +658,52 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     formProblems(formText, contributing, auditText.replace(/(## 2026-11-13：十六度目の見落とし[\s\S]*?)No lawyer has reviewed this section\./, '$1')),
   ];
   ok('break on purpose: the old invitation, the sentence for someone else\'s record, the output field, the steps field, a DOI or an iD in the example, the old line of CONTRIBUTING.md, the heading, the count, the lawyer (' + fpBroken.filter((b) => b.length).length + ' / ' + fpBroken.length + ')', fpBroken.every((b) => b.length > 0));
+
+  console.log('\n2026-11-15. What could not be checked, the time limits, and the record');
+  {
+    const W = require('../scripts/weekly-issue.js');
+    const F = require('../src/fetch.js');
+    const rep = (o) => Object.assign({ counts: { error: 0, warning: 0, info: 0 }, findings: [], failed: [] }, o);
+    const down = rep({ failed: [{ doi: '10.5072/x.1', error: 'HTTP 503' }] });
+    const closeAll = W.plan({ number: 7, body: W.MARK }, rep({}), '#', 'd');
+    const stays = W.plan({ number: 7, body: W.MARK }, down, '#', 'd');
+    ok('a DOI that could not be read keeps the issue open as "not checked", is named in it, and fails the run; nothing read means close',
+      closeAll.kind === 'close' && stays.kind === 'update' && /1 not checked/.test(stays.title) && stays.body.includes('could not be read this time (not checked)') && W.plan(null, down, '#', 'd').kind === 'create' && W.notChecked(down) === 1 && W.notChecked(rep({})) === 0);
+    /* The real get: a server error, an answer that is not JSON, and no answer, each an error after the retries; a 404 is null. */
+    const answers = (list) => { let k = 0; return async () => list[Math.min(k++, list.length - 1)]; };
+    const realFetch = global.fetch;
+    const res = (status, text) => ({ status, ok: status >= 200 && status < 300, json: async () => JSON.parse(text) });
+    const tryGet = async (a) => { global.fetch = a; try { return await F.httpGet({ wait: async () => {} })('https://api.example.invalid/x'); } catch (e) { return 'error: ' + e.message; } finally { global.fetch = realFetch; } };
+    const r503 = await tryGet(answers([res(503, '{}')])), rBad = await tryGet(answers([res(200, '<html>')])), r404 = await tryGet(answers([res(404, '')]));
+    const rTime = await tryGet(async () => { const e = new Error('timeout'); e.name = 'TimeoutError'; throw e; });
+    ok('a server error, an answer that is not JSON and no answer within a minute are errors, never an empty record; a 404 is "not found"',
+      /^error: .*HTTP 503$/.test(r503) && /could not be read$/.test(rBad) && r404 === null && /no answer within a minute$/.test(rTime) && read('src/fetch.js').includes('signal: AbortSignal.timeout(60000)'));
+    const wfFiles2 = fs.readdirSync(path.join(ROOT, '.github', 'workflows')).filter((f) => /\.ya?ml$/.test(f));
+    const jobsOf = (y) => (y.split(/^jobs:\n/m)[1] || '').split(/\n(?=  [a-z][a-z0-9_-]*:\n)/).filter((b) => /^  [a-z]/.test(b));
+    const noLimit = wfFiles2.flatMap((f) => jobsOf(read(path.join('.github', 'workflows', f))).filter((b) => { const m = /\n    timeout-minutes: (\d+)\n/.exec('\n' + b + '\n'); return !m || Number(m[1]) > 60; }).map((b) => f + ' ' + (/^  ([a-z0-9_-]+)/.exec(b) || [])[1]));
+    ok('every job of every workflow (' + wfFiles2.length + ') has a time limit of 60 minutes or less', noLimit.length === 0, noLimit.join(', '));
+    const aud = read('docs/legal-audit-2026-11-12.md');
+    const HEAD = '\n## 2026-11-15：自動化を固める\n';
+    const sec = aud.includes(HEAD) ? aud.slice(aud.indexOf(HEAD), aud.indexOf('\n## ', aud.indexOf(HEAD) + 5)) : '';
+    const recProblems = (s) => {
+      const bad = [];
+      const rows = s.split('\n').filter((l) => /^\| (?!---|Place \|)/.test(l)).map((l) => l.replace(/^\| | \|$/g, '').split(' | '));
+      const K = ['Error', 'Insufficient basis', 'Omission', 'Wording', 'No problem'];
+      if (rows.length < 3 || !rows.every((y) => y.length === 6 && K.includes(y[4]))) bad.push('table');
+      const said = ((/Findings in this table: ([^.]+)\./.exec(s) || [])[1] || '');
+      if (said !== K.filter((k) => rows.some((y) => y[4] === k)).map((k) => k + ' ' + rows.filter((y) => y[4] === k).length).join(', ')) bad.push('count');
+      if (!s.includes('2026-11-15 に利用者が決め、Claude が書きました') || rows.some((y) => !y[5].includes('2026-11-15 に利用者が決め、Claude が書きました'))) bad.push('who decided');
+      if (!s.includes('No lawyer has reviewed this section.')) bad.push('lawyer');
+      return bad;
+    };
+    ok('the record has its section 「2026-11-15：自動化を固める」, with its table, count, maker and the sentence on lawyers', sec && recProblems(sec).length === 0, recProblems(sec).join(', '));
+    const br = [
+      W.plan({ number: 7, body: W.MARK }, down, '#', 'd').kind === 'close',
+      recProblems(sec.replace(/Findings in this table: [^.]+\./, 'Findings in this table: Omission 9.')).length === 0,
+      recProblems(sec.replace('No lawyer has reviewed this section.', '')).length === 0,
+    ];
+    ok('break on purpose: a count changed and the lawyer sentence taken out each fail, and a DOI not read never closes the issue', br.every((b) => !b));
+  }
 
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
