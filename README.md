@@ -166,11 +166,17 @@ node verification/check.js
 The checks run without the network. The answers of the APIs come from made-up records in `verification/fixtures`.
 The checks break a complete record in 16 ways, one for each rule that reads a single record, and see that each break raises its rule and no other.
 They run on every push and pull request, and once a week (`.github/workflows/check.yml`).
-They also check the repository itself: no dependencies anywhere, workflows that only read except for the issue of the monthly run, actions pinned to a commit, and no keys, tokens or e-mail addresses in any tracked file.
+They also check the repository itself: no dependencies anywhere, workflows that only read except for the issue of the monthly run and the labels and comments of the two workflows that answer issues, actions pinned to a commit, and no keys, tokens or e-mail addresses in any tracked file.
 `.github/workflows/run.yml` runs the tool itself against the live APIs, by hand or once a month, and writes the report to the job summary and to an artifact of the run.
 For the author's own iD it also reads every DOI in the catalogue of the author’s works (`catalog.json` in cpsbvbng26-dotcom, read from GitHub), with the type and the copies elsewhere that the catalogue gives each work (`scripts/catalog-inputs.js`).
 It keeps one open issue with the latest report, and the findings of that report. When the findings change, it comments with the ones that are gone and the ones that are new. The issue closes itself when no error or warning is left.
-The run commits nothing. Only this run talks to api.github.com, with the token GitHub gives the run, and it may write issues and nothing else.
+The run commits nothing. Of the runs of the tool, only this one talks to api.github.com, with the token GitHub gives the run, and it may write issues and nothing else.
+
+`.github/workflows/empty-issue.yml` answers an issue opened with an empty body, which happens when the issue forms do not show in a mobile app or browser.
+It adds the label `empty body` and one fixed comment, in Japanese and English, that links the issue forms, and takes the label off when the body is filled in.
+It acts only on an open issue with no label and no comment that a bot, the owner, a member or a collaborator did not open: 10 minutes after the issue is opened, and once a week for issues opened more than 24 hours before.
+It closes, locks and deletes nothing; a person reads every issue, title included.
+It is the same file in every repository of the operator that takes issues, and `check_ecosystem.js` in cpsbvbng26-dotcom checks the copies and runs it on made-up issues.
 
 ## Citing
 
