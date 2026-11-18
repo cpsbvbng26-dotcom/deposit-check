@@ -471,7 +471,8 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   /* The only write is the issue of the monthly run, in run.yml. Any other write fails here. */
   const writes = workflows.flatMap((f) => [...read(f).matchAll(/^\s+([a-z-]+):\s*write\b/gm)].map((m) => path.basename(f) + ':' + m[1]));
   /* 2026-11-14: the checked intake (checked-intake.yml, the same file in the 13 repositories) labels issues and comments on them (from 2026-11-15 it closes none), so it writes to issues too. */
-  ok('the only write permission is issues: write, given to the job in run.yml and to the checked intake', writes.sort().join() === 'checked-intake.yml:issues,run.yml:issues'
+  /* 2026-11-19: the answer to an issue opened with an empty body (empty-issue.yml, the same file in 15 repositories) labels the issue and comments once, so it writes to issues too, and to nothing else. */
+  ok('the only write permission is issues: write, given to the job in run.yml, to the checked intake and to the answer to an issue with an empty body', writes.sort().join() === 'checked-intake.yml:issues,empty-issue.yml:issues,run.yml:issues'
     && /^permissions:\n  contents: read\n/m.test(read('.github/workflows/run.yml')), writes.join(', '));
   const uses = workflows.concat(['action.yml']).flatMap((f) => [...read(f).matchAll(/^\s*(?:-\s+)?uses:\s*(\S+)(.*)$/gm)].map((m) => [f, m[1], m[2]])).filter(([, u]) => !u.startsWith('./'));
   const loose = uses.filter(([, u, rest]) => !/^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/.test(u) || !/^\s+#\s*\S+/.test(rest));
