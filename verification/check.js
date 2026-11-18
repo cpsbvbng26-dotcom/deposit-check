@@ -214,8 +214,12 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
    * group of its concurrency, by issue number. Nothing else is allowed to it. */
   /* 2026-11-15: the group moved to the checking job, with a group of its own for a run that does not check. */
   const INTAKE_GROUP = "      group: ${{ (github.event_name == 'issues' && github.event.sender.login != github.repository_owner) && format('checked-intake-issue-{0}', github.event.issue.number) || format('checked-intake-run-{0}', github.run_id) }}";
-  ok('every workflow only reads, except that the job of the monthly run may write issues, and the checked intake writes issues; inputs go through the environment',
-    wfFiles.length >= 2 && wfFiles.every((f) => (f === 'checked-intake.yml' ? /^permissions:\n  contents: read\n  issues: write\n(?!  \w)/m.test(wf(f)) && !/^ +permissions:/m.test(wf(f)) : /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f)))
+  /* 2026-11-19: the answer to an issue opened with an empty body (empty-issue.yml) is the same file in 15 repositories, and
+   * check_ecosystem.js in cpsbvbng26-dotcom (13f) pins it. It writes a label and one comment, so its top level writes issues
+   * and nothing else, and it reads no contents. */
+  ok('every workflow only reads, except that the job of the monthly run may write issues, the checked intake writes issues, and the answer to an issue with an empty body writes issues and reads nothing else; inputs go through the environment',
+    wfFiles.length >= 2 && wfFiles.every((f) => (f === 'checked-intake.yml' ? /^permissions:\n  contents: read\n  issues: write\n(?!  \w)/m.test(wf(f)) && !/^ +permissions:/m.test(wf(f))
+      : f === 'empty-issue.yml' ? /^permissions:\n  issues: write\n(?!  \w)/m.test(wf(f)) && !/^ +permissions:/m.test(wf(f)) : /^permissions:\n  contents: read\n(?!  \w)/m.test(wf(f)))
       && (f !== 'run.yml' || /^    permissions:\n      contents: read\n      issues: write\n(?!      \w)/m.test(wf(f)))
       && onlyInEnv(f === 'checked-intake.yml' ? wf(f).split('\n').filter((l) => l !== INTAKE_GROUP).join('\n') : wf(f))));
   const cff = read('CITATION.cff');
