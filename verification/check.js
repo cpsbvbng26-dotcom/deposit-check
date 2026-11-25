@@ -518,6 +518,53 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const outside = loaded.filter(([, m]) => !m.startsWith('./') && !m.startsWith('../') && !builtin.has(m.replace(/^node:/, '')));
   ok('the tool loads only modules of Node.js and its own files, as the README says', loaded.length > 0 && outside.length === 0
     && readme.includes('the tool uses only the standard library of Node.js'), outside.map((x) => x.join(': ')).join(', '));
+  /* 2026-11-25: JOSS's review checklist asks whether installation proceeds as documented. The tool is not on the npm
+   * registry; on 2026-11-25 `npm install -g github:cpsbvbng26-dotcom/deposit-check` and `npx github:…` were run and gave the
+   * command. Here, offline: the README gives the three ways, package.json names the command and the checks as its test, and
+   * the files npm packs hold every file the command loads, followed from bin/deposit-check.js. Broken copies must fail. */
+  const closure = (start) => {
+    const seen = new Set();
+    const walk = (f) => {
+      if (seen.has(f)) return;
+      seen.add(f);
+      for (const m of read(f).matchAll(/\brequire\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g)) walk(path.posix.normalize(path.posix.join(path.posix.dirname(f), m[1])).replace(/^(?!.*\.js$)(.*)$/, '$1.js'));
+    };
+    walk(start);
+    return [...seen];
+  };
+  const installProblems = (man, rd, binText) => {
+    const bad = [];
+    const bin = (man.bin || {})['deposit-check'];
+    if (bin !== 'bin/deposit-check.js' || !binText.startsWith('#!/usr/bin/env node\n')) bad.push('the command');
+    if ((man.scripts || {}).test !== 'node verification/check.js') bad.push('npm test');
+    const packed = man.files || [];
+    const missing = closure('bin/deposit-check.js').filter((f) => !packed.some((x) => f === x || f.startsWith(x.replace(/\/$/, '') + '/')));
+    if (missing.length) bad.push('not packed: ' + missing.join(', '));
+    for (const c of ['npm install -g github:cpsbvbng26-dotcom/deposit-check\n', 'npx github:cpsbvbng26-dotcom/deposit-check --help\n', 'git clone https://github.com/cpsbvbng26-dotcom/deposit-check && cd deposit-check && node bin/deposit-check.js --help\n', 'In a clone, `npm test` runs the checks']) if (!rd.includes(c)) bad.push('the README: ' + c.slice(0, 30));
+    return bad;
+  };
+  const binText = read('bin/deposit-check.js');
+  const pkgJson = JSON.parse(read('package.json'));
+  const ip = installProblems(pkgJson, readme, binText);
+  ok('installation: the README gives npm from GitHub, npx and a clone; package.json names the command and npm test; npm packs every file the command loads (' + closure('bin/deposit-check.js').length + ')', ip.length === 0, ip.join('; '));
+  const ipBroken = [
+    installProblems(Object.assign({}, pkgJson, { files: pkgJson.files.filter((x) => x !== 'src') }), readme, binText),
+    installProblems(Object.assign({}, pkgJson, { bin: { 'deposit-check': 'bin/other.js' } }), readme, binText),
+    installProblems(Object.assign({}, pkgJson, { scripts: {} }), readme, binText),
+    installProblems(pkgJson, readme.replace('npm install -g github:cpsbvbng26-dotcom/deposit-check\n', 'npm install -g deposit-check\n'), binText),
+    installProblems(pkgJson, readme, binText.replace('#!/usr/bin/env node\n', '')),
+  ];
+  ok('break on purpose: src/ left out of the package, another command file, no npm test, an install from the registry, no shebang (' + ipBroken.filter((b) => b.length).length + ' / ' + ipBroken.length + ')', ipBroken.every((b) => b.length > 0));
+  /* The fields of the JSON report, as the README lists them, are those that the report writes. */
+  const jsonRep = JSON.parse(REP.json({ owner: OWNER, works: [], records: new Map(), failed: [] }, [{ rule: 'abstract-missing', severity: 'error', doi: '10.5072/x', detail: 'd' }]));
+  const jsonOk = (rd) => {
+    const s = (rd.split('### The JSON report\n')[1] || '').split('\n## ')[0];
+    const rows = [...s.matchAll(/^\| `([a-z]+)` \|/gm)].map((m) => m[1]);
+    return rows.join() === Object.keys(jsonRep).join() && s.includes('`{ ' + Object.keys(jsonRep.findings[0]).join(', ') + ' }`')
+      && s.includes('`{ doi, error }`') && s.includes('`' + R.SEVERITIES.join('`, `') + '`');
+  };
+  ok('the README lists the fields of the JSON report, in order, and the fields of a finding; a row taken out or a field renamed fails',
+    jsonOk(readme) && !jsonOk(readme.replace(/\n\| `failed` \|[^\n]*/, '')) && !jsonOk(readme.replace('`{ rule, severity, doi, detail }`', '`{ rule, doi, detail }`')));
   ok('the README gives the type and the status of the catalogue, in both languages, under the title; CITATION.cff says software',
     readme.startsWith('# deposit-check\n\n種類：ソフトウェア　状態：改訂中\n\nType: Software · Status: In revision\n\n') && /^type: software$/m.test(cff));
   const changes = [...read('CHANGELOG.md').matchAll(/^## (\d+\.\d+\.\d+) \((\d{4}-\d{2}-\d{2})\)$/gm)].map((m) => [m[1], m[2]]);
