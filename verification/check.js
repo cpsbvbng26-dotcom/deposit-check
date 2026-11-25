@@ -300,19 +300,104 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const pmd = read('paper/paper.md');
   const bib = read('paper/paper.bib');
   const body = pmd.replace(/^---[\s\S]*?\n---\n/, '').replace(/<!--[\s\S]*?-->/g, '');
-  const pwords = (body.match(/[A-Za-z0-9][A-Za-z0-9'’.-]*/g) || []).length;
-  ok('the body is within the JOSS length of 250 to 1000 words (' + pwords + ')', pwords >= 250 && pwords <= 1000);
-  ok('the sections JOSS asks for are there, with the AI usage disclosure, and Claude is not an author',
-    ['# Summary', '# Statement of need', '# State of the field', '# Software design', '# Research impact statement', '# AI usage disclosure', '# References'].every((h) => body.includes('\n' + h + '\n'))
-    && body.includes('Claude is not an author.') && !/name: .*Claude/.test(pmd));
-  ok('the one author has the ORCID iD of CITATION.cff', /authors:\n  - name: Takuya Nemoto\n    orcid: 0009-0000-1406-0547\n/.test(pmd) && (pmd.match(/^  - name:/gm) || []).length === 2);
-  const keys = [...bib.matchAll(/^@\w+\{([^,]+),/gm)].map((m) => m[1]);
-  const cited = [...new Set([...body.matchAll(/\[@([a-z]+)\]/g)].map((m) => m[1]))];
-  ok('every citation is in paper.bib, and every entry is cited', cited.length > 0 && cited.every((k) => keys.includes(k)) && keys.every((k) => cited.includes(k)), 'cited ' + cited.join(',') + ' / bib ' + keys.join(','));
   const W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
-  ok('the number of rules in the paper is the number of rules (' + R.RULES.length + ')', body.includes('applies ' + W[R.RULES.length] + ' rules'));
-  ok('no DOI in paper.bib until one is checked at its source', !/\bdoi\s*=/i.test(bib));
-  ok('the paper says the research impact as it is: no use by other authors yet', body.includes('There is no record yet of use by other authors.'));
+  /* 2026-11-25: JOSS's guide to the paper (docs/paper.md of openjournals/joss, read on 2026-11-24) asks for 750 to 1750 words
+   * and for the sections Summary, Statement of need, State of the field, Software design, Research impact statement,
+   * AI usage disclosure, Acknowledgements and References. The draft of 2026-11-03 was checked against 250 to 1000 words and
+   * without Acknowledgements or the order. Each DOI of paper.bib was read at Crossref or DataCite on 2026-11-25, and
+   * paper/doi-sources.json records the title and year each registry gave; before, the check asked for no DOI at all.
+   * The numbers the paper writes in words are those of the code and of the run it names. The affirmation of human review
+   * is the author's own statement, which Claude cannot make, so the draft must not claim it. Broken copies must fail. */
+  const SECTIONS = ['Summary', 'Statement of need', 'State of the field', 'Software design', 'Research impact statement', 'AI usage disclosure', 'Acknowledgements', 'References'];
+  const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const inWords = (n) => (n < 20 ? UNITS[n] : TENS[Math.floor(n / 10)] + (n % 10 ? '-' + UNITS[n % 10] : ''));
+  const cap = (s) => s[0].toUpperCase() + s.slice(1);
+  const runReport = read('docs/runs/2026-11-11-catalog/report.md');
+  const runHead = /, (\d+) DOIs read\. (\d+) errors, (\d+) warnings, (\d+) notes\./.exec(runReport);
+  const runAbstracts = (runReport.match(/^\| error \| No abstract in the DOI metadata \(`abstract-missing`\) \|/gm) || []).length;
+  const sources = JSON.parse(read('paper/doi-sources.json'));
+  const flat = (s) => String(s).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const bibEntries = (b) => [...b.matchAll(/^@(\w+)\{([^,\n]+),\n([\s\S]*?)\n\}/gm)].map((m) => {
+    const f = {};
+    for (const x of m[3].matchAll(/^\s+([a-z]+)\s*=\s*\{(.*)\},?$/gm)) f[x[1]] = x[2];
+    return { type: m[1], key: m[2], f };
+  });
+  const paperProblems = (p, b, src) => {
+    const bad = [];
+    const bodyOf = p.replace(/^---[\s\S]*?\n---\n/, '').replace(/<!--[\s\S]*?-->/g, '');
+    const n = (bodyOf.match(/[A-Za-z0-9][A-Za-z0-9'’.-]*/g) || []).length;
+    if (n < 750 || n > 1750) bad.push('length ' + n);
+    const heads = [...bodyOf.matchAll(/^# (.+)$/gm)].map((m) => m[1].trim());
+    if (heads.join('|') !== SECTIONS.join('|')) bad.push('sections ' + heads.join(', '));
+    if (!/\n# References\n*$/.test(bodyOf)) bad.push('References is not last');
+    const sec = (h) => { const i = bodyOf.indexOf('\n# ' + h + '\n'); const j = bodyOf.indexOf('\n# ', i + 1); return i < 0 ? '' : bodyOf.slice(i, j < 0 ? bodyOf.length : j); };
+    for (const h of SECTIONS.slice(0, -1)) if ((sec(h).match(/[A-Za-z]+/g) || []).length < 25) bad.push('section too short: ' + h);
+    const es = bibEntries(b);
+    const keys = es.map((e) => e.key);
+    const cited = [...new Set([...bodyOf.matchAll(/(?<![\w.`-])@([a-z]+)\b/g)].map((m) => m[1]))];
+    const brackets = [...bodyOf.matchAll(/\[([^\]]*@[^\]]*)\]/g)].map((m) => m[1]);
+    if (!brackets.every((x) => /^@[a-z]+(; @[a-z]+)*$/.test(x))) bad.push('citation syntax');
+    if (!cited.length || !cited.every((k) => keys.includes(k)) || !keys.every((k) => cited.includes(k))) bad.push('citations ' + cited.join(',') + ' / bib ' + keys.join(','));
+    if (new Set(keys).size !== keys.length) bad.push('a key twice');
+    const used = new Set();
+    for (const e of es) {
+      if (!e.f.title || !e.f.year) { bad.push(e.key + ': no title or year'); continue; }
+      if (!e.f.doi) { if (!/^https:\/\//.test(e.f.url || '')) bad.push(e.key + ': neither a DOI nor a URL'); continue; }
+      const d = e.f.doi.toLowerCase();
+      const r = src.records[d];
+      used.add(d);
+      if (!r) { bad.push(e.key + ': a DOI not read at its agency'); continue; }
+      if (!['crossref', 'datacite', 'jalc'].includes(r.agency) || !['api.crossref.org', 'api.datacite.org'].includes(r.api)) bad.push(e.key + ': agency');
+      if (flat(e.f.title) !== flat(r.title)) bad.push(e.key + ': title differs from the registry');
+      if (Number(e.f.year) !== r.year) bad.push(e.key + ': year differs from the registry');
+    }
+    for (const d of Object.keys(src.records)) if (!used.has(d)) bad.push('a record without an entry: ' + d);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(src.read || '')) bad.push('the date of reading');
+    const prose = bodyOf.replace(/\s+/g, ' ');
+    if (!prose.includes('applies ' + W[R.RULES.length] + ' rules')) bad.push('the number of rules');
+    if (!prose.includes('retries a refused or failed request ' + ['never', 'once', 'twice'][F.RETRY_WAITS_MS.length] + ', after ' + F.RETRY_WAITS_MS.map((ms) => inWords(ms / 1000)).join(' and ') + ' seconds')) bad.push('the retries');
+    if (!runHead || !prose.includes('It read ' + inWords(Number(runHead[1])) + ' DOIs and found ' + inWords(Number(runHead[2])) + ' errors, ' + inWords(Number(runHead[3])) + ' warnings and ' + inWords(Number(runHead[4])) + ' notes.')) bad.push('the counts of the run of 2026-11-11');
+    if (!prose.includes(cap(inWords(runAbstracts)) + ' Zenodo deposits had no abstract in their metadata')) bad.push('the abstracts missing in the run');
+    if (!prose.includes('There is no record yet of use by other authors.')) bad.push('the research impact as it is');
+    if (!prose.includes('Claude is not an author.') || /name: .*Claude/.test(p) || !prose.includes('Claude Code (Anthropic)') || !prose.includes('Claude Opus 5 and Claude Opus 5.5') || !prose.includes('paper/doi-sources.json')) bad.push('the AI usage disclosure');
+    if (/\bthe author(s)? (decided|reviewed|validated|takes? responsibility)|\bhuman authors? (reviewed|edited|validated)/i.test(prose)) bad.push('an affirmation that only the author can make');
+    if (!p.replace(/\s+/g, ' ').includes('Both statements are the author\'s own. Claude, which drafted this paper, cannot make them for the author, and this draft does not contain them.')) bad.push('the note on the affirmation');
+    if (!p.includes('Draft. Not submitted.')) bad.push('the draft note');
+    return bad;
+  };
+  const pp = paperProblems(pmd, bib, sources);
+  const pwords = (body.match(/[A-Za-z0-9][A-Za-z0-9'’.-]*/g) || []).length;
+  ok('the paper follows JOSS\'s guide of 2026: ' + pwords + ' words within 750 to 1750, the eight sections in order with References last, every citation in paper.bib and every entry cited, each DOI read at its agency with the title and year of the registry, the numbers it writes those of the code and of the run of 2026-11-11, the AI usage disclosure, no affirmation made for the author, and no use by other authors claimed', pp.length === 0, pp.join('; '));
+  ok('the one author has the ORCID iD of CITATION.cff', /authors:\n  - name: Takuya Nemoto\n    orcid: 0009-0000-1406-0547\n/.test(pmd) && (pmd.match(/^  - name:/gm) || []).length === 2);
+  const swap = (t, a, b) => t.replace('\n# ' + a + '\n', '\n# @@A\n').replace('\n# ' + b + '\n', '\n# ' + a + '\n').replace('\n# @@A\n', '\n# ' + b + '\n');
+  const firstDoi = Object.keys(sources.records)[0];
+  const paperBreaks = [
+    ['two sections swapped', swap(pmd, 'Software design', 'State of the field'), bib, sources],
+    ['Acknowledgements taken out', pmd.replace('\n# Acknowledgements\n', '\n'), bib, sources],
+    ['a section of the old guide added', pmd.replace('\n# References\n', '\n# Mathematics\n\n' + 'Nothing here. '.repeat(10) + '\n\n# References\n'), bib, sources],
+    ['too long', pmd.replace('\n# Acknowledgements\n', '\n' + 'More words here. '.repeat(70) + '\n\n# Acknowledgements\n'), bib, sources],
+    ['too short', pmd.replace(/\n# Statement of need\n[\s\S]*?\n# Research impact statement\n/, '\n# Statement of need\n\n' + 'Researchers need to see the metadata of their deposits as a machine reads it. '.repeat(3)
+      + '\n\n# State of the field\n\nThe other tools [@fair; @autoupdate; @sophaxis; @participation; @brightspots; @coki; @fuji; @fujisoftware; @doiorcid; @rorcid] work at the scale of a member, an object or an institution. ' + 'They do not start from one person. '.repeat(3)
+      + '\n\n# Software design\n\nThe reader retries a refused or failed request ' + ['never', 'once', 'twice'][F.RETRY_WAITS_MS.length] + ', after ' + F.RETRY_WAITS_MS.map((ms) => inWords(ms / 1000)).join(' and ') + ' seconds. ' + 'Each rule is a pure function of a record. '.repeat(3) + '\n\n# Research impact statement\n'), bib, sources],
+    ['a citation not in paper.bib', pmd.replace('[@zenodo]', '[@zenodo; @nowhere]'), bib, sources],
+    ['an entry not cited', pmd, bib + '\n@misc{uncited,\n  title = {Nothing},\n  year  = {2026},\n  url   = {https://example.org/}\n}\n', sources],
+    ['a title changed', pmd, bib.replace('{ORCID}: a system to uniquely identify researchers', '{ORCID}: a system to identify researchers'), sources],
+    ['a year changed', pmd, bib.replace(/year    = \{2016\}/, 'year    = {2015}'), sources],
+    ['a DOI not read', pmd, bib.replace('10.1087/20120404', '10.1087/20120405'), sources],
+    ['a record without an entry', pmd, bib, Object.assign({}, sources, { records: Object.assign({}, sources.records, { '10.5555/unused': { agency: 'crossref', api: 'api.crossref.org', title: 'x', year: 2026, type: 'x' } }) })],
+    ['a record of another agency', pmd, bib, Object.assign({}, sources, { records: Object.assign({}, sources.records, { [firstDoi]: Object.assign({}, sources.records[firstDoi], { api: 'doi.org' }) }) })],
+    ['the number of rules', pmd.replace('applies ' + W[R.RULES.length] + ' rules', 'applies ' + W[R.RULES.length + 1] + ' rules'), bib, sources],
+    ['the counts of the run', pmd.replace(/It read ([a-z-]+) DOIs/, 'It read sixty DOIs'), bib, sources],
+    ['the abstracts missing', pmd.replace(/\n([A-Z][a-z-]+) Zenodo deposits had no abstract/, '\nNine Zenodo deposits had no abstract'), bib, sources],
+    ['the retries', pmd.replace('after five and twenty seconds', 'after five and thirty seconds'), bib, sources],
+    ['an affirmation written for the author', pmd.replace('Claude is not an author.', 'The author reviewed and validated all of it.\nClaude is not an author.'), bib, sources],
+    ['use by others claimed', pmd.replace('There is no record yet of use by other authors.', 'Other authors use it.'), bib, sources],
+    ['Claude as an author', pmd.replace('  - name: Takuya Nemoto\n', '  - name: Takuya Nemoto\n  - name: Claude\n'), bib, sources],
+    ['a citation written with a comma', pmd.replace('[@fuji; @fujisoftware]', '[@fuji, @fujisoftware]'), bib, sources],
+  ];
+  const stillPass = paperBreaks.filter(([, p, b, s]) => paperProblems(p, b, s).length === 0).map(([nm]) => nm);
+  ok('break on purpose: the paper check fails on each of ' + paperBreaks.length + ' broken copies (sections, length, citations, titles, years, DOIs, records, numbers, disclosure)', stillPass.length === 0, stillPass.join(', '));
   /* 2026-11-12 (the third missed findings): the one affiliation is the university where the author is enrolled, as JOSS's
    * guide to the paper asks for the authors and their affiliations, with no title; the body says in one sentence that the
    * tool is not a project of the university and that the university does not endorse it. Broken copies must fail. */
