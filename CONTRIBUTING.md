@@ -27,6 +27,7 @@ Write in English or Japanese. The maintainer aims to answer within 7 days.
 4. Open a pull request. Say what changed and why. The same checks run on GitHub Actions.
 
 A new rule needs a line in the rules table of the README, a case in the checks that raises it, and a case that does not.
+A change to the number of lines of a file in `src/` or `bin/` needs the new number in the table of sizes in `docs/joss.md`; the checks name the file.
 A check is never loosened to make a change pass. If a check fails, fix the change, or explain in the pull request why the check is wrong.
 Only `src/fetch.js` reaches the network, and only with GET requests to public APIs that need no key. Keep it that way.
 

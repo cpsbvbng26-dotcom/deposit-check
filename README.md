@@ -235,6 +235,7 @@ A submission to the Journal of Open Source Software (JOSS) is planned.
 JOSS asks for a repository public for more than six months; the first commit here is from 2026-11-02, so the earliest date is 2027-05-03.
 A draft of the paper JOSS asks for is in `paper/paper.md` and `paper/paper.bib`, with the sections of JOSS's current guide. Each DOI in its references was read at Crossref or DataCite, and `verification/paper-dois.json` records what each registry gave. `.github/workflows/draft-pdf.yml` builds the draft PDF with the Open Journals action when `paper/` changes, and keeps it as an artifact of the run.
 There is no record yet of use by anyone but the author. Whether the tool is within the scope of JOSS is for JOSS to decide.
+The state of each of JOSS's four gates before review, of each item of its review checklist and of the size of the tool is kept in [`docs/joss.md`](docs/joss.md), in Japanese.
 
 ## Licence
 
@@ -283,7 +284,7 @@ OpenAlex や Google Scholar などの索引、ORCID の自動更新、リポジ�
 このリポジトリの issue で届いた個人の情報は、[免責事項](https://github.com/cpsbvbng26-dotcom/cpsbvbng26-dotcom/blob/main/DISCLAIMER.md#情報の扱い)の「情報の扱い」の節のとおりに扱います。その節は、このリポジトリを名指しています。
 利用の目的、2026-12-01 から不具合の報告の確かめが読むもの（書かれた ORCID iD と DOI。残しません）、開示・訂正・利用の停止・消去の求めを受ける所は、その節にあります。
 
-Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、投稿できるのは最短で 2027-05-03 です。著者以外に使われた記録はまだありません。
+Journal of Open Source Software（JOSS）への投稿を計画しています。公開から六か月を超えたリポジトリが要るので、投稿できるのは最短で 2027-05-03 です。著者以外に使われた記録はまだありません。査読の前の門と査読の項目ごとの状態は、[`docs/joss.md`](docs/joss.md) にあります。
 
 版 0.1.0 は Zenodo に保存してあります（DOI [10.5281/zenodo.24033082](https://doi.org/10.5281/zenodo.24033082)）。
 すべての版に共通する DOI は [10.5281/zenodo.24033081](https://doi.org/10.5281/zenodo.24033081) で、いちばん新しい版を指します。
