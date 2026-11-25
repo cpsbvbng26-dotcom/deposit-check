@@ -842,6 +842,71 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     ok('break on purpose: a count changed and the lawyer sentence taken out each fail, and a DOI not read never closes the issue', br.every((b) => !b));
   }
 
+  /* ------------------------------------------------------------ 19 */
+  console.log('\n19. The plan for JOSS (docs/joss.md, 2026-11-25)');
+  {
+    /* The four gates before review, each item of the review checklist, and the size of the tool, as Claude judged them on
+     * 2026-11-25 from JOSS's docs. The earliest date is six months and one day after the first commit (UTC); the README says
+     * the same date in both languages. The lines of each module, and the number of rules, are those of the code. The record
+     * gives no task to the user (rule 11). It does not say that the size criterion is met. Broken copies must fail. */
+    const FIRST = '2026-11-02';
+    const d = new Date(FIRST + 'T00:00:00Z');
+    d.setUTCMonth(d.getUTCMonth() + 6);
+    d.setUTCDate(d.getUTCDate() + 1);
+    const EARLIEST = d.toISOString().slice(0, 10);
+    const QUOTES = [
+      'The repository must have been public for more than six months prior to submission, with active development spanning that period.',
+      'There must be evidence that the software is being used for research — at minimum by the developers themselves, and ideally by others.',
+      'Aspirational statements about future use are not sufficient',
+      'The development history must show ongoing iteration, not a single burst of commits.',
+      '"Minor utility" packages, including "thin" API clients, and single-function packages are not acceptable.',
+      'Authors must affirm that human team members thoroughly reviewed, modified, and validated all AI-generated content while making primary architectural and design decisions.',
+      'The paper should be between 750-1750 words.',
+    ];
+    const modules = ['src', 'bin'].flatMap((dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.js')).map((f) => dir + '/' + f)).sort();
+    const linesOf = (f) => (read(f).match(/\n/g) || []).length;
+    const planProblems = (doc, rd, lines) => {
+      const bad = [];
+      const gates = ['1 公開の期間', '2 研究に使われている証拠', '3 開かれた開発の実践', '4 反復した開発'];
+      const rows = doc.split('\n').filter((l) => /^\| [1-4] /.test(l)).map((l) => l.replace(/^\| | \|$/g, '').split(' | '));
+      if (rows.map((r) => r[0]).join() !== gates.join() || !rows.every((r) => r.length === 4)) bad.push('the four gates');
+      const g1 = rows[0] || [];
+      if (!(g1[2] || '').includes('最初のコミットは ' + FIRST + ' です') || !(g1[3] || '').includes('最短は ' + EARLIEST + ' です。最初のコミットの日から六か月と一日です。')) bad.push('the date of gate 1');
+      if (!rd.includes('the first commit here is from ' + FIRST + ', so the earliest date is ' + EARLIEST + '.') || !rd.includes('投稿できるのは最短で ' + EARLIEST + ' です。')) bad.push('the date in the README');
+      if (!(rows[3] || [])[3] || !rows[3][3].startsWith('満ちていません。')) bad.push('gate 4 is not met');
+      for (const q of QUOTES) if (!doc.includes('`' + q + '`')) bad.push('the quotation: ' + q.slice(0, 30));
+      const size = doc.split('\n').filter((l) => /^\| `(src|bin)\/[^`]+` \| \d+ \|/.test(l)).map((l) => /^\| `([^`]+)` \| (\d+) \|/.exec(l));
+      const named = size.map((m) => m[1]).sort();
+      if (named.join() !== modules.join()) bad.push('the modules of the table: ' + named.join(','));
+      for (const m of size) if (lines[m[1]] !== Number(m[2])) bad.push('the lines of ' + m[1] + ': ' + m[2] + ' / ' + lines[m[1]]);
+      if (!doc.includes('\n規則は ' + R.RULES.length + ' です。\n')) bad.push('the number of rules');
+      const median = /\| `\.github\/workflows\/run\.yml` [^\n]*Median run time (\d+) seconds/.exec(read('docs/legal-audit-2026-11-12.md'));
+      if (!median || !doc.includes('その実行の中央値を ' + median[1] + ' 秒としています')) bad.push('the median run time of the record');
+      if (!doc.includes('この条件を満たしているとは書きません。\n満たすかどうかは、JOSS が決めます。')) bad.push('the size criterion is not claimed');
+      if (/[てで]ください|利用者が確かめ|利用者の手作業|利用者の作業|needs the owner|for the owner to/.test(doc)) bad.push('a task for the user');
+      if (!rd.includes('[`docs/joss.md`](docs/joss.md), in Japanese.') || !rd.includes('[`docs/joss.md`](docs/joss.md) にあります。')) bad.push('the README points to it');
+      return bad;
+    };
+    const plan = read('docs/joss.md');
+    const realLines = Object.fromEntries(modules.map((f) => [f, linesOf(f)]));
+    const pl = planProblems(plan, readme, realLines);
+    ok('docs/joss.md gives the four gates with the earliest date ' + EARLIEST + ' (as the README does), the quotations of JOSS, the lines of each of the ' + modules.length + ' modules and the number of rules as in the code, no claim that the size criterion is met, and no task for the user', pl.length === 0, pl.join('; '));
+    const firstMod = modules[0];
+    const plBroken = [
+      planProblems(plan, readme, Object.assign({}, realLines, { [firstMod]: realLines[firstMod] + 1 })),
+      planProblems(plan.replace(/\n\| `bin\/deposit-check\.js` \|[^\n]*/, ''), readme, realLines),
+      planProblems(plan.replace('最短は ' + EARLIEST + ' です。', '最短は 2027-05-02 です。'), readme, realLines),
+      planProblems(plan, readme.replace('so the earliest date is ' + EARLIEST, 'so the earliest date is 2027-04-03'), realLines),
+      planProblems(plan.replace('\n規則は ' + R.RULES.length + ' です。\n', '\n規則は ' + (R.RULES.length + 1) + ' です。\n'), readme, realLines),
+      planProblems(plan.replace('`"Minor utility" packages', '`"Small utility" packages'), readme, realLines),
+      planProblems(plan.replace('この条件を満たしているとは書きません。\n', 'この条件を満たしています。\n'), readme, realLines),
+      planProblems(plan + '\nタグを付けてください。\n', readme, realLines),
+      planProblems(plan.replace('| 満ちていません。', '| 満ちています。'), readme, realLines),
+      planProblems(plan.replace('その実行の中央値を ', 'その実行の中央値を 1'), readme, realLines),
+    ];
+    ok('break on purpose: a line count, a module left out, the date of gate 1 in either file, the number of rules, a word of a quotation, the size claimed, a task for the user, gate 4 met, the median run time (' + plBroken.filter((b) => b.length).length + ' / ' + plBroken.length + ')', plBroken.every((b) => b.length > 0));
+  }
+
   console.log('\n' + '-'.repeat(60));
   if (fails.length) { console.log(pass + ' passed, ' + fails.length + ' failed.'); fails.forEach((f) => console.log('  - ' + f)); process.exit(1); }
   console.log(pass + ' checks passed.');
