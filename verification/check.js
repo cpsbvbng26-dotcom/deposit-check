@@ -145,11 +145,84 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const md = REP.markdown(ctx, all);
   const c = REP.counts(all);
   ok('the first line counts the works, the DOIs read and the findings', md.includes('ORCID iD ' + OWNER + ': 4 works with a DOI on the record, ' + ctx.records.size + ' DOIs read. ' + c.error + ' errors, ' + c.warning + ' warnings, ' + c.info + ' notes.'));
-  const sections = md.split('\n## ').slice(1).filter((x) => !x.startsWith('What to do')).map((x) => [...x.matchAll(/^\| (error|warning|info) \|/gm)].map((m) => R.SEVERITIES.indexOf(m[1])));
+  const sections = md.split('\n## ').slice(1).filter((x) => !x.startsWith(REP.WHERE + '\n')).map((x) => [...x.matchAll(/^\| (error|warning|info) \|/gm)].map((m) => R.SEVERITIES.indexOf(m[1])));
   ok('works with errors come first, and within a work errors come before warnings and notes; each finding names its rule',
     sections.every((sv) => sv.every((v, i) => !i || v >= sv[i - 1])) && sections.every((sv, i) => !i || sv[0] >= sections[i - 1][0])
     && all.every((f) => md.includes('`' + f.rule + '`')));
-  ok('“What to do” gives the fix of each rule that was raised, and only those', R.RULES.every((r) => md.includes('**`' + r.id + '`** ' + r.fix) === all.some((f) => f.rule === r.id)));
+  ok('“' + REP.WHERE + '” gives the text of each rule that was raised, and only those', R.RULES.every((r) => md.includes('**`' + r.id + '`** ' + r.fix) === all.some((f) => f.rule === r.id)));
+  /* 2026-11-25: the last section states facts and gives no instruction (CLAUDE.md, rule 11). It was "What to do", and each
+   * rule said what to do in the imperative ("Add the abstract", "Ask the co-authors", "let them update the record for you").
+   * Now it says which record holds each field and where that record is changed. The strictness is the same: every rule
+   * raised is there with its id, and only those; each text names the record that holds the field (the DOI metadata at the
+   * repository, the ORCID record at orcid.org, or OpenAlex); and no sentence of the section, of the README's account of it
+   * or of the paper's, begins with an instruction or addresses the reader. Broken copies must fail. */
+  const HOLDS = {
+    doi: (t) => t.includes('DOI metadata') && t.includes('at the repository'),
+    orcid: (t) => t.includes('ORCID record') && t.includes('orcid.org'),
+    openalex: (t) => t.includes('What OpenAlex holds is changed by OpenAlex alone.'),
+  };
+  const HOLDER = { 'unresolved': 'orcid', 'not-on-orcid': 'orcid', 'openalex-missing': 'openalex', 'openalex-abstract-missing': 'openalex' };
+  const VERB = /^(?:(?:or|and|then|also|just)\s+)?(add|give|choose|ask|change|link|check|report|remove|let|correct|please|click|open|send|tick|delete|contact|e-?mail|write|go|visit|fill|label|run|make|use|set|edit|see|try|update|do|consider|ensure|keep|include|provide|register|enter|select|fix|request|deposit|upload|put|create|note|read|follow|look|find|get|correct|replace)\b/i;
+  const orders = (text) => {
+    const bad = [];
+    if (/what to (?:do|change)/i.test(text)) bad.push('“what to do”');
+    if (/\byou(?:r|rs|rself)?\b/i.test(text)) bad.push('the second person');
+    if (/\bplease\b/i.test(text)) bad.push('“please”');
+    for (const line of text.split('\n')) {
+      const prose = line.replace(/^- \*\*`[a-z-]+`\*\* /, '').replace(/^#+ /, '');
+      for (const part of prose.split(/(?<=[.;:!?])\s+|\s+—\s+|\(\s*/)) if (VERB.test(part.trim())) bad.push('an instruction: “' + part.trim().slice(0, 40) + '”');
+    }
+    return bad;
+  };
+  const whereProblems = (rules, mdText, readmeText, paperText) => {
+    const bad = [];
+    const i = mdText.indexOf('\n## ' + REP.WHERE + '\n');
+    if (i < 0) return ['no section “' + REP.WHERE + '”'];
+    const section = mdText.slice(i + 1);
+    if (!section.startsWith('## ' + REP.WHERE + '\n\n' + REP.WHERE_NOTE + '\n\n')) bad.push('the note on where the fields are held');
+    for (const r of rules) {
+      const want = HOLDER[r.id] || 'doi';
+      if (!HOLDS[want](r.fix)) bad.push(r.id + ' does not name ' + want);
+      if (all.some((f) => f.rule === r.id) !== section.includes('- **`' + r.id + '`** ' + r.fix + '\n')) bad.push(r.id + ' in the section');
+    }
+    bad.push(...orders(section), ...orders(rules.map((r) => r.fix).join('\n')));
+    const told = 'The report gives, for each rule it raises, which record holds the field and where it is changed.';
+    if (!readmeText.includes('\n' + told + '\n')) bad.push('the README’s account of the report');
+    if (!paperText.includes('says, for each finding, which record holds the field and where it is changed.')) bad.push('the paper’s account of the report');
+    if (!readmeText.includes('report["a report in Markdown or JSON: each finding, its rule, and where each field is changed"]')) bad.push('the README’s figure of the report');
+    bad.push(...orders(told), ...orders(readmeText.split('\n').filter((l) => l.includes('a report in Markdown or JSON')).join('\n')));
+    return bad;
+  };
+  const readmeNow = read('README.md'), paperNow = read('paper/paper.md');
+  const whp = whereProblems(R.RULES, md, readmeNow, paperNow);
+  ok('“' + REP.WHERE + '” names, for each rule raised, the record that holds the field and where it is changed, and gives no instruction; so do the README and the paper', whp.length === 0, whp.join('; '));
+  const withFix = (id, fix) => R.RULES.map((r) => (r.id === id ? Object.assign({}, r, { fix }) : r));
+  const mdWith = (id, fix) => REP.markdown(ctx, all).replace('**`' + id + '`** ' + R.RULES.find((r) => r.id === id).fix, '**`' + id + '`** ' + fix);
+  const oldFix = {
+    'abstract-missing': 'Add the abstract as a description of the type Abstract at the repository. Indexes such as OpenAlex and Google Scholar read it from there; the PDF alone is not enough.',
+    'not-on-orcid': 'Add it to the ORCID record: Works, Add works, Search & link, DataCite or Crossref. Or let them update the record for you (auto-update).',
+    'openalex-abstract-missing': 'OpenAlex reads the abstract from the DOI metadata when it next updates the work. If it still has none after some weeks, report it to OpenAlex through its support form.',
+  };
+  const keywordsFix = R.RULES.find((r) => r.id === 'keywords-missing').fix;
+  const unresolvedFix = R.RULES.find((r) => r.id === 'unresolved').fix;
+  const whBroken = [
+    whereProblems(R.RULES, md.replace('## ' + REP.WHERE + '\n', '## What to do\n'), readmeNow, paperNow),
+    whereProblems(withFix('abstract-missing', oldFix['abstract-missing']), mdWith('abstract-missing', oldFix['abstract-missing']), readmeNow, paperNow),
+    whereProblems(withFix('not-on-orcid', oldFix['not-on-orcid']), mdWith('not-on-orcid', oldFix['not-on-orcid']), readmeNow, paperNow),
+    whereProblems(withFix('openalex-abstract-missing', oldFix['openalex-abstract-missing']), mdWith('openalex-abstract-missing', oldFix['openalex-abstract-missing']), readmeNow, paperNow),
+    whereProblems(R.RULES, md.replace(REP.WHERE_NOTE, REP.WHERE_NOTE + ' Please check each record.'), readmeNow, paperNow),
+    whereProblems(withFix('keywords-missing', keywordsFix + ' Your readers find the work by them.'), mdWith('keywords-missing', keywordsFix + ' Your readers find the work by them.'), readmeNow, paperNow),
+    whereProblems(withFix('keywords-missing', keywordsFix + ' Or edit them at the repository.'), mdWith('keywords-missing', keywordsFix + ' Or edit them at the repository.'), readmeNow, paperNow),
+    whereProblems(withFix('unresolved', unresolvedFix.replace(/orcid\.org/g, 'the registry')), mdWith('unresolved', unresolvedFix.replace(/orcid\.org/g, 'the registry')), readmeNow, paperNow),
+    whereProblems(withFix('language-missing', 'The language of the work (for example en or ja).'), mdWith('language-missing', 'The language of the work (for example en or ja).'), readmeNow, paperNow),
+    whereProblems(R.RULES, md.replace(/\n- \*\*`not-on-orcid`\*\* [^\n]*/, ''), readmeNow, paperNow),
+    whereProblems(R.RULES, md.replace(REP.WHERE_NOTE + '\n\n', ''), readmeNow, paperNow),
+    whereProblems(R.RULES, md, readmeNow.replace('which record holds the field and where it is changed.', 'what to do at the repository.'), paperNow),
+    whereProblems(R.RULES, md, readmeNow.replace('its rule, and where each field is changed', 'its rule, and what to change at the repository'), paperNow),
+    whereProblems(R.RULES, md, readmeNow, paperNow.replace('which record holds the field and where it is changed.', 'what to change at the repository.')),
+  ];
+  ok('break on purpose: the heading “What to do” back, an earlier imperative text back for three rules, “Please”, “your”, an instruction after “Or”, the ORCID record without orcid.org, a text that names no record, a rule raised and left out, the note dropped, and the old words in the README (twice) and in the paper (' + whBroken.filter((b) => b.length).length + ' / ' + whBroken.length + ')',
+    whBroken.every((b) => b.length > 0));
   ok('the DOI that could not be read is named, as the network’s fault, not the record’s', md.includes('Could not be read (the network or the API, not the record): 10.5072/broken.'));
   ok('a | in a title does not break the table', REP.markdown({ owner: null, works: [], records: new Map([['10.1/a', Object.assign({}, d200, { doi: '10.1/a', title: 'A | B' })]]) }, [{ rule: 'abstract-missing', severity: 'error', doi: '10.1/a', detail: 'x|y' }]).includes('A \\| B'));
   const js = JSON.parse(REP.json(ctx, all));

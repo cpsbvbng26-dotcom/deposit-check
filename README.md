@@ -23,7 +23,7 @@ flowchart LR
   orcid["an ORCID iD"] --> tool["deposit-check"]
   dois["DOIs, and the resource type each should have"] --> tool
   apis["ORCID, DataCite, Crossref, JaLC and OpenAlex (GET only)"] --> tool
-  tool --> report["a report in Markdown or JSON: each finding, its rule, and what to change at the repository"]
+  tool --> report["a report in Markdown or JSON: each finding, its rule, and where each field is changed"]
   tool --> code["exit status: 0, 1 when a finding reaches --fail-on, 2 when it could not run"]
 ```
 
@@ -130,7 +130,7 @@ The repository's own CI uses the action on itself, on the example and without th
 - **warning:** something is probably wrong or incomplete.
 - **info:** worth knowing, and often fine as it is.
 
-The report gives, for each rule it raises, what to do at the repository.
+The report gives, for each rule it raises, which record holds the field and where it is changed.
 
 The versions of one work are read together:
 - Only the latest version that was read is checked. Older versions and the record of all versions repeat it, and every finding would come once for each.
