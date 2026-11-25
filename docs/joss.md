@@ -77,7 +77,7 @@ JOSS の文は、`openjournals/joss` の `docs/` から写しています。
 | `src/fetch.js` | 113 | 読み取り。網に出る唯一のモジュール |
 | `src/metadata.js` | 220 | 三つの登録機関の登録情報を一つの形にする |
 | `src/rules.js` | 251 | 規則 |
-| `src/report.js` | 57 | 報告 |
+| `src/report.js` | 63 | 報告 |
 | `bin/deposit-check.js` | 95 | command |
 
 規則は 19 です。

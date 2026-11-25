@@ -32,7 +32,7 @@ They read the metadata registered with the DOI: the title, the creators and thei
 deposit-check reads that metadata for all the works of one researcher and says what is missing or inconsistent.
 Given an ORCID iD, it gathers the works on the public ORCID record and the works whose DataCite [@datacite] or Crossref [@crossref] metadata carries the iD.
 It reads the metadata of each DOI from DataCite, Crossref or JaLC [@jalc], and asks OpenAlex whether it holds each work and its abstract.
-It then applies nineteen rules and writes a report in Markdown or JSON that says, for each finding, what to change at the repository.
+It then applies nineteen rules and writes a report in Markdown or JSON that says, for each finding, which record holds the field and where it is changed.
 It runs from the command line or as a GitHub Action, needs no key or account, and writes nothing anywhere.
 
 # Statement of need
