@@ -11,6 +11,12 @@ function counts(findings) {
   return c;
 }
 
+/* The last section of the report: for each rule raised, which record holds the field and where it is changed. It states
+ * facts and gives no instruction (2026-11-25): the records are the DOI metadata at the repository, the ORCID record and
+ * OpenAlex, and the tool writes to none of them. */
+const WHERE = 'Where each field is changed';
+const WHERE_NOTE = 'Each field is held in the DOI metadata that a repository or a publisher registered with DataCite, Crossref or JaLC, in the ORCID record, or at OpenAlex, and is changed only where it is held. This tool reads them and changes none of them.';
+
 const esc = (s) => String(s).replace(/\|/g, '\\|').replace(/[<>]/g, (m) => (m === '<' ? '&lt;' : '&gt;'));
 
 function markdown(ctx, findings) {
@@ -29,7 +35,7 @@ function markdown(ctx, findings) {
   }
   const used = RULES.filter((r) => findings.some((f) => f.rule === r.id));
   if (used.length) {
-    lines.push('', '## What to do', '');
+    lines.push('', '## ' + WHERE, '', WHERE_NOTE, '');
     used.forEach((r) => lines.push('- **`' + r.id + '`** ' + r.fix));
   }
   if (!findings.length) lines.push('', 'Nothing to report.');
@@ -54,4 +60,4 @@ function fails(findings, at) {
   return findings.some((f) => SEVERITIES.indexOf(f.severity) <= limit);
 }
 
-module.exports = { markdown, json, counts, fails };
+module.exports = { markdown, json, counts, fails, WHERE, WHERE_NOTE };

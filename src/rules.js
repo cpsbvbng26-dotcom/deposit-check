@@ -1,5 +1,5 @@
 'use strict';
-/* The rules. Each one says what it finds, how serious it is, and what to do about it.
+/* The rules. Each one says what it finds, how serious it is, and which record holds the field and where it is changed.
  * A record rule reads one work; a set rule reads all of them with the ORCID record.
  * Pure: no rule reaches the network.
  *
@@ -19,13 +19,13 @@ const RULES = [
   {
     id: 'abstract-missing', scope: 'record', severity: 'error',
     title: 'No abstract in the DOI metadata',
-    fix: 'Add the abstract as a description of the type Abstract at the repository. Indexes such as OpenAlex and Google Scholar read it from there; the PDF alone is not enough.',
+    fix: 'The abstract is a description of the type Abstract in the DOI metadata, changed at the repository with the record (on Zenodo, the Description of the record). Indexes such as OpenAlex and Google Scholar read it from there; an abstract in the PDF alone does not reach them.',
     check: (r) => (r.abstract ? [] : ['no description of the type Abstract']),
   },
   {
     id: 'abstract-short', scope: 'record', severity: 'warning',
     title: 'The abstract is very short, or repeats the title',
-    fix: 'Give the abstract of the work itself, not a one-line summary or the title again.',
+    fix: 'The abstract is the one in the DOI metadata, changed at the repository with the record. One that gives a line of summary, or the title again, tells indexes and readers little more than the title.',
     check: (r) => {
       if (!r.abstract) return [];
       if (norm(r.abstract) === norm(r.title)) return ['the abstract is the title'];
@@ -35,25 +35,25 @@ const RULES = [
   {
     id: 'licence-missing', scope: 'record', severity: 'error',
     title: 'No licence in the DOI metadata',
-    fix: 'Choose a licence at the repository (for example CC BY 4.0). Without one, readers may not reuse the work, and some indexes do not list it as open.',
+    fix: 'The licence is the rights statement of the DOI metadata, chosen at the repository (on Zenodo, the Licence of the record; for example CC BY 4.0). Without one, readers may not reuse the work, and some indexes do not list it as open.',
     check: (r) => (r.rights.length ? [] : ['no rights statement']),
   },
   {
     id: 'licence-unreadable', scope: 'record', severity: 'warning',
     title: 'The licence is given only in words',
-    fix: 'Give the licence as a URL or an SPDX identifier (for example https://creativecommons.org/licenses/by/4.0/ or CC-BY-4.0), so that machines can read it.',
+    fix: 'The rights statement of the DOI metadata is set at the repository. Machines read a licence given as a URL or an SPDX identifier (for example https://creativecommons.org/licenses/by/4.0/ or CC-BY-4.0); a licence in words alone is read by people only.',
     check: (r) => (r.rights.length && !r.rights.some((x) => x.licence || x.uri) ? ['rights: ' + r.rights.map((x) => x.text || '(empty)').join('; ')] : []),
   },
   {
     id: 'owner-orcid-missing', scope: 'record', severity: 'error',
     title: 'Your ORCID iD is not on your name in the DOI metadata',
-    fix: 'Add your ORCID iD to your name among the creators at the repository. The iD in the metadata is what links the work to you in DataCite, Crossref and ORCID’s automatic updates.',
+    fix: 'The creators of the DOI metadata, with the ORCID iD on each name, are set at the repository. The iD in the metadata is what links the work to the holder of the iD given with --orcid in DataCite, Crossref and ORCID’s automatic updates.',
     check: (r, ctx) => (ctx.owner && !r.creators.some((c) => c.orcid === ctx.owner) ? ['none of the creators carries ' + ctx.owner] : []),
   },
   {
     id: 'creators-orcid-missing', scope: 'record', severity: 'info',
     title: 'Some creators of a work with several creators have no ORCID iD in the DOI metadata',
-    fix: 'Ask the co-authors for their ORCID iDs and add them at the repository.',
+    fix: 'The creators of the DOI metadata, with the ORCID iD on each name, are set at the repository. Each co-author holds an iD of their own, and the metadata carries only the iDs given at the repository.',
     check: (r) => {
       const without = r.creators.filter((c) => c.person && !c.orcid);
       return r.creators.length > 1 && without.length ? [without.map((c) => c.name).join(', ')] : [];
@@ -62,13 +62,13 @@ const RULES = [
   {
     id: 'type-generic', scope: 'record', severity: 'warning',
     title: 'The resource type is missing or says only “Other”',
-    fix: 'Choose the type of the work at the repository, such as Preprint, Journal article, Dataset or Software.',
+    fix: 'The resource type is part of the DOI metadata, set at the repository (on Zenodo, the Resource type of the record), with types such as Preprint, Journal article, Dataset or Software.',
     check: (r) => (!r.type.general || /^other$/i.test(r.type.general) ? ['type: ' + (r.type.general || '(none)') + (r.type.specific ? ' / ' + r.type.specific : '')] : []),
   },
   {
     id: 'type-unexpected', scope: 'record', severity: 'warning',
     title: 'The resource type differs from the type expected for the DOI',
-    fix: 'Change the resource type at the repository (on Zenodo, the Resource type of the record) to the one intended, or correct the type given with --expect-types. The type compared is DataCite’s resourceTypeGeneral, so only records registered by DataCite are compared.',
+    fix: 'The resource type is part of the DOI metadata, set at the repository (on Zenodo, the Resource type of the record). The expected type is the one in the file given with --expect-types, so the difference lies in one of the two. The type compared is DataCite’s resourceTypeGeneral, so only records registered by DataCite are compared.',
     check: (r, ctx) => {
       const want = expectedType(r, ctx);
       if (!want || r.agency !== 'DataCite') return [];
@@ -78,37 +78,37 @@ const RULES = [
   {
     id: 'date-missing', scope: 'record', severity: 'warning',
     title: 'No full date of publication',
-    fix: 'Give the date of publication with day, month and year. Only the year is in the metadata.',
+    fix: 'The date of publication is part of the DOI metadata, set at the repository. Only the year is in the metadata; a full date has the day, the month and the year.',
     check: (r) => (r.date ? [] : ['year only: ' + (r.year || '(none)')]),
   },
   {
     id: 'keywords-missing', scope: 'record', severity: 'warning',
     title: 'No keywords',
-    fix: 'Add a few keywords (subjects) at the repository. They help indexes and readers find the work.',
+    fix: 'Keywords are the subjects of the DOI metadata, set at the repository. Indexes and readers find the work by them.',
     check: (r) => (r.keywords.length ? [] : ['no subjects']),
   },
   {
     id: 'language-missing', scope: 'record', severity: 'info',
     title: 'No language',
-    fix: 'Give the language of the work (for example en or ja).',
+    fix: 'The language of the work (for example en or ja) is part of the DOI metadata, set at the repository.',
     check: (r) => (r.language ? [] : ['no language']),
   },
   {
     id: 'version-unlinked', scope: 'record', severity: 'warning',
     title: 'A version without a link to its other versions',
-    fix: 'Link the version to the record of all versions (IsVersionOf), or to the version before it (IsNewVersionOf). Zenodo does this when a new version is made from the old one, not when a new deposit is made. Figshare versions are tied by their DOIs (.v1, .v2), and are not flagged.',
+    fix: 'The link between versions is a related identifier of the DOI metadata at the repository: IsVersionOf the record of all versions, or IsNewVersionOf the version before it. Zenodo adds it when a new version is made from the old one, not when a new deposit is made. Figshare versions are tied by their DOIs (.v1, .v2), and are not flagged.',
     check: (r) => (r.version && family(r) === r.doi && !r.relations.some((x) => VERSION_RELATIONS.test(x.type)) ? ['version ' + r.version + ', no version relation'] : []),
   },
   {
     id: 'relations-none', scope: 'record', severity: 'info',
     title: 'No related works',
-    fix: 'Where they exist, link the code, the data, other copies of the work and its published version (for example IsSupplementedBy, IsIdenticalTo, IsPreprintOf).',
+    fix: 'Related works are the related identifiers of the DOI metadata, set at the repository: the code, the data, other copies of the work and its published version (for example IsSupplementedBy, IsIdenticalTo, IsPreprintOf). A work with no such related work has nothing to link.',
     check: (r) => (r.relations.length ? [] : ['no related identifiers']),
   },
   {
     id: 'identical-unlinked', scope: 'record', severity: 'warning',
     title: 'A copy of the same text is not linked with IsIdenticalTo',
-    fix: 'Add the copy as a related work of the type IsIdenticalTo at the repository (on Zenodo: Related works, “Is identical to”), so that indexes can tell the two are one text and its citations are not split. One side is enough: an SSRN record cannot carry the link, and the Zenodo record can. Or correct the copies given with --expect-identical.',
+    fix: 'The link between two copies of one text is a related work of the type IsIdenticalTo in the DOI metadata at the repository (on Zenodo: Related works, “Is identical to”). With it, indexes can tell that the two are one text, and its citations are not split. One side is enough: an SSRN record cannot carry the link, and the Zenodo record can. The copies compared are the ones in the file given with --expect-identical.',
     check: (r, ctx) => copiesOf(r, ctx).filter((id) => !identicalLinked(r, id, ctx)).map((id) => {
       const other = r.relations.filter((x) => M.relatedKey(x.id) === id).map((x) => x.type);
       return 'not linked to ' + id + (other.length ? ' (linked as ' + other.join(', ') + ' only)' : '');
@@ -117,25 +117,25 @@ const RULES = [
   {
     id: 'openalex-missing', scope: 'record', severity: 'info',
     title: 'OpenAlex does not hold the work',
-    fix: 'OpenAlex takes new works from DataCite and Crossref, usually within days. If the work is older than that, check that its DOI metadata is complete, or ask OpenAlex through its support form.',
+    fix: 'What OpenAlex holds is changed by OpenAlex alone. It takes new works from DataCite and Crossref, usually within days. For an older work that it does not hold, one place a gap can lie is the DOI metadata at the repository, and OpenAlex takes reports through its support form.',
     check: (r) => (r.openalex && !r.openalex.held ? ['not in OpenAlex'] : []),
   },
   {
     id: 'openalex-abstract-missing', scope: 'record', severity: 'warning',
     title: 'The DOI metadata has an abstract, and OpenAlex has none',
-    fix: 'OpenAlex reads the abstract from the DOI metadata when it next updates the work. If it still has none after some weeks, report it to OpenAlex through its support form.',
+    fix: 'What OpenAlex holds is changed by OpenAlex alone. It reads the abstract from the DOI metadata when it next updates the work, and takes reports through its support form when the abstract is still missing after some weeks.',
     check: (r) => (r.abstract && r.openalex && r.openalex.held && !r.openalex.abstract ? ['OpenAlex holds the work without an abstract'] : []),
   },
   {
     id: 'unresolved', scope: 'set', severity: 'error',
     title: 'A DOI on the ORCID record is not found at DataCite, Crossref or JaLC',
-    fix: 'Check the DOI on the ORCID record for a typing error. If the work was withdrawn, remove it from the record.',
+    fix: 'The DOIs of the works on the ORCID record are as the record gives them, typing errors included, and a withdrawn work stays on the record until the record is changed. The record is changed at orcid.org, by the holder of the iD or by an organisation the holder allows.',
     check: (ctx) => ctx.works.filter((w) => !ctx.records.has(w.doi)).map((w) => ({ doi: w.doi, detail: (w.title || '(no title)') + ' — not found' })),
   },
   {
     id: 'not-on-orcid', scope: 'set', severity: 'warning',
     title: 'A work that carries your ORCID iD is not on your ORCID record',
-    fix: 'Add it to the ORCID record: Works, Add works, Search & link, DataCite or Crossref. Or let them update the record for you (auto-update).',
+    fix: 'The works on the ORCID record are changed at orcid.org (Works, Add works, Search & link, DataCite or Crossref), by the holder of the iD. DataCite and Crossref add works to the record themselves when the holder allows them to (auto-update).',
     check: (ctx) => {
       if (!ctx.owner) return [];
       /* A version counts as listed when any version of the same work is on the record. */
@@ -148,7 +148,7 @@ const RULES = [
   {
     id: 'same-title', scope: 'set', severity: 'info',
     title: 'Two deposits with the same title that are not linked as versions or copies',
-    fix: 'If they are the same work, link them (IsIdenticalTo, or IsVersionOf the same record) so that citations are not split. If they differ, a distinct title helps readers.',
+    fix: 'Two deposits of one work are linked in the DOI metadata at the repository (IsIdenticalTo, or IsVersionOf the same record), and then their citations are not split. Two different works with one title are told apart by a distinct title.',
     check: (ctx) => {
       const linked = (a, b) => a.relations.some((x) => x.id.toLowerCase().includes(b.doi)) || b.relations.some((x) => x.id.toLowerCase().includes(a.doi))
         || family(a) === family(b);
