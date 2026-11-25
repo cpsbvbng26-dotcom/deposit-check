@@ -34,6 +34,26 @@ A run over the author's own works, with what it found, is kept in [`docs/runs/20
 
 Node.js 22 or later. There are no dependencies to install: the tool uses only the standard library of Node.js, and `verification/check.js` checks that every module it loads is either part of Node.js or one of its own files.
 
+### Install
+
+The tool is not on the npm registry. npm installs it from this repository, and puts the command `deposit-check` on the path:
+
+```
+npm install -g github:cpsbvbng26-dotcom/deposit-check
+deposit-check --help
+```
+
+Or run it once without installing it, or from a clone:
+
+```
+npx github:cpsbvbng26-dotcom/deposit-check --help
+git clone https://github.com/cpsbvbng26-dotcom/deposit-check && cd deposit-check && node bin/deposit-check.js --help
+```
+
+In a clone, `npm test` runs the checks (`node verification/check.js`). The package that npm installs holds `bin/` and `src/`, and the checks see that it holds every file the command loads.
+
+### Run
+
 ```
 node bin/deposit-check.js --orcid 0000-0002-1825-0097
 node bin/deposit-check.js --doi 10.5281/zenodo.1234567 --doi 10.6084/m9.figshare.7654321.v2
@@ -54,6 +74,19 @@ node bin/deposit-check.js --orcid 0000-0002-1825-0097 --format json --fail-on wa
 | `--answers <file>` | Read the answers of the APIs from a JSON file instead of the network. For the example in `examples/`, and for trying the action. |
 
 The exit status is 0 when nothing reaches `--fail-on`, 1 when something does, and 2 when the tool could not run.
+
+### The JSON report
+
+`--format json` and `--json-out` write one object, for programs such as the submission check of Sophaxis:
+
+| Field | |
+| --- | --- |
+| `owner` | The ORCID iD given, or `null` |
+| `works` | How many works with a DOI the ORCID record lists |
+| `read` | How many DOIs had their metadata read |
+| `failed` | The DOIs that could not be read because of the network or an API, each as `{ doi, error }`. They are not checked, and give no finding |
+| `counts` | How many findings of each severity: `error`, `warning`, `info` |
+| `findings` | Each finding as `{ rule, severity, doi, detail }`, the most serious first and then in the order of the rules below |
 
 ## As a GitHub Action
 
@@ -200,7 +233,7 @@ Personal information in the issues of this repository is handled as the section 
 
 A submission to the Journal of Open Source Software (JOSS) is planned.
 JOSS asks for a repository public for more than six months; the first commit here is from 2026-11-02, so the earliest date is 2027-05-03.
-A draft of the paper JOSS asks for is in `paper/paper.md` and `paper/paper.bib`. Its references carry no DOI until each is checked at its source.
+A draft of the paper JOSS asks for is in `paper/paper.md` and `paper/paper.bib`, with the sections of JOSS's current guide. Each DOI in its references was read at Crossref or DataCite, and `verification/paper-dois.json` records what each registry gave. `.github/workflows/draft-pdf.yml` builds the draft PDF with the Open Journals action when `paper/` changes, and keeps it as an artifact of the run.
 There is no record yet of use by anyone but the author. Whether the tool is within the scope of JOSS is for JOSS to decide.
 
 ## Licence

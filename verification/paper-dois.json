@@ -1,0 +1,111 @@
+{
+  "_": "What each registration agency gave for each DOI in paper.bib, read on the date below from the API named. The agency is the one api.crossref.org gives for the DOI. Made by a script outside the repository; the checks compare the title and year of each entry of paper.bib with this record.",
+  "read": "2026-11-25",
+  "records": {
+    "10.1087/20120404": {
+      "agency": "crossref",
+      "api": "api.crossref.org",
+      "title": "ORCID: a system to uniquely identify researchers",
+      "year": 2012,
+      "type": "journal-article"
+    },
+    "10.1109/coinfo.2009.66": {
+      "agency": "crossref",
+      "api": "api.crossref.org",
+      "title": "DataCite - A Global Registration Agency for Research Data",
+      "year": 2009,
+      "type": "proceedings-article"
+    },
+    "10.1162/qss_a_00022": {
+      "agency": "crossref",
+      "api": "api.crossref.org",
+      "title": "Crossref: The sustainable source of community-owned scholarly metadata",
+      "year": 2020,
+      "type": "journal-article"
+    },
+    "10.1241/johokanri.55.42": {
+      "agency": "jalc",
+      "api": "api.crossref.org",
+      "title": "Japan Link Center (JaLC): link management and DOI assignment for Japanese electronic scholarly contents",
+      "year": 2012,
+      "type": "journal-article"
+    },
+    "10.48550/arxiv.2205.01833": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "OpenAlex: A fully-open index of scholarly works, authors, venues, institutions, and concepts",
+      "year": 2022,
+      "type": "Preprint"
+    },
+    "10.1038/sdata.2016.18": {
+      "agency": "crossref",
+      "api": "api.crossref.org",
+      "title": "The FAIR Guiding Principles for scientific data management and stewardship",
+      "year": 2016,
+      "type": "journal-article"
+    },
+    "10.25495/7gxk-rd71": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "Zenodo",
+      "year": 2013,
+      "type": "Service"
+    },
+    "10.5281/zenodo.24033372": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "Sophaxis: an overlay preprint server for philosophy and mathematics",
+      "year": 2026,
+      "type": "Software"
+    },
+    "10.13003/259681daayhn": {
+      "agency": "crossref",
+      "api": "api.crossref.org",
+      "title": "How good is your metadata? A tour of the Crossref Participation Reports tool",
+      "year": 2026,
+      "type": "report"
+    },
+    "10.1016/j.patter.2021.100370": {
+      "agency": "crossref",
+      "api": "api.crossref.org",
+      "title": "An automated solution for measuring the progress toward FAIR research data",
+      "year": 2021,
+      "type": "journal-article"
+    },
+    "10.5281/zenodo.22932920": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "F-UJI - An Automated FAIR Data Assessment Tool",
+      "year": 2026,
+      "type": "Software"
+    },
+    "10.5281/zenodo.13828121": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "Finding DataCite BrightSpots",
+      "year": 2024,
+      "type": "Text"
+    },
+    "10.5281/zenodo.6366694": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "Academic Observatory Workflows",
+      "year": 2026,
+      "type": "Software"
+    },
+    "10.5281/zenodo.14878632": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "DOI ORCID Index: a dataset for enriching bibliographic metadata with ORCID identifiers (2026)",
+      "year": 2026,
+      "type": "Dataset"
+    },
+    "10.5438/3dfw-z4kq": {
+      "agency": "datacite",
+      "api": "api.datacite.org",
+      "title": "Explaining the DataCite/ORCID Auto-update",
+      "year": 2015,
+      "type": "Text"
+    }
+  }
+}
