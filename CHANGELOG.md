@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `docs/joss.md` records, in Japanese, the state of each of JOSS's gates before review, of each item of its review checklist, of the paper's format and of the size of the tool, with JOSS's words. The checks compare its dates, sizes and quotations with the code and the README.
 - The JOSS paper follows JOSS's current guide: the eight sections in order, from Summary to References, in 750 to 1750 words. The state of the field compares the tools that assess metadata, with a reason to build rather than contribute; the research impact gives only the author's own use and that of Sophaxis. Each DOI in `paper/paper.bib` was read at Crossref or DataCite, and `verification/paper-dois.json` records the title and year each gave. The checks follow the guide, and each broken copy of the paper that they make fails.
 - `.github/workflows/draft-pdf.yml` builds the draft PDF of the paper with the Open Journals action when `paper/` changes.
 - The README says how to install the tool from GitHub with npm or npx, and lists the fields of the JSON report. The checks see that npm packs every file the command loads.
