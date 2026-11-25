@@ -293,6 +293,65 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   ok('--json-out writes JSON whatever --format is', r.out.startsWith('# Deposit check') && JSON.parse(fs.readFileSync(tmp, 'utf8')).read === 1);
   fs.rmSync(tmp, { force: true });
   ok('the README says that the issue of the monthly run exists, when it closes, and that it uses api.github.com', readme.includes('closes itself when no error or warning is left') && readme.includes('api.github.com'));
+  /* 2026-11-25: the issue text must name the schedule that run.yml has. The cadence is read from the cron of run.yml. The
+   * head of the issue (and its line for DOIs not checked) must use its words and not those of another cadence; the README's
+   * line on run.yml and the comment at the top of run.yml must say "once a" month (or week); and the paper, the scripts,
+   * the notes of the fixtures and the Unreleased part of CHANGELOG.md must not call it the run or the issue of another
+   * cadence. Until 2026-11-13 the run was weekly; issue #4 keeps the text of the last weekly run (2026-11-10) until the
+   * next run replaces it. */
+  const CADENCE = { month: ['Monthly run, ', 'updated each month', 'next month'], week: ['Weekly run, ', 'updated each week', 'next week'] };
+  const JA = { month: '月に一度の実行', week: '週に一度の実行' };
+  const cadenceOf = (yml) => {
+    const crons = [...yml.matchAll(/cron: '([^']+)'/g)].map((m) => m[1].split(' '));
+    if (crons.length !== 1 || crons[0].length !== 5) return null;
+    const [mi, h, dom, mon, dow] = crons[0];
+    const n = (x) => /^\d+$/.test(x);
+    if (n(mi) && n(h) && n(dom) && mon === '*' && dow === '*') return 'month';
+    if (n(mi) && n(h) && dom === '*' && mon === '*' && n(dow)) return 'week';
+    return null;
+  };
+  const cadenceProblems = (yml, head, rd, docs) => {
+    const c = cadenceOf(yml);
+    if (!c) return ['the cron of run.yml is neither monthly nor weekly, and the issue has no words for it'];
+    const bad = [];
+    CADENCE[c].filter((w) => !head.includes(w)).forEach((w) => bad.push('the issue lacks "' + w + '"'));
+    const rdLine = rd.split('\n').find((l) => l.startsWith('`.github/workflows/run.yml` runs the tool itself')) || '';
+    if (!rdLine.includes('once a ' + c)) bad.push('the README\'s line on run.yml does not say "once a ' + c + '"');
+    if (!(yml.split('\n')[1] || '').includes('once a ' + c)) bad.push('the comment at the top of run.yml does not say "once a ' + c + '"');
+    if (!rd.includes(JA[c])) bad.push('the README in Japanese does not say 「' + JA[c] + '」');
+    for (const [other, words] of Object.entries(CADENCE)) {
+      if (other === c) continue;
+      words.filter((w) => head.includes(w)).forEach((w) => bad.push('the issue says "' + w + '"'));
+      const re = new RegExp('\\b' + other + 'ly (run|issue)\\b', 'i');
+      for (const [f, t] of Object.entries(docs)) if (re.test(t)) bad.push(f + ' calls it the ' + other + 'ly run or issue');
+      if (rdLine.includes('once a ' + other)) bad.push('the README\'s line on run.yml says "once a ' + other + '"');
+      [['README.md', rd], ['docs/joss.md', docs['docs/joss.md']]].filter(([, t]) => (t || '').includes(JA[other])).forEach(([f]) => bad.push(f + ' says 「' + JA[other] + '」'));
+    }
+    return bad;
+  };
+  const headOf = (body) => body.split('\n\n')[0];
+  const issueHead = headOf(W.plan(null, Object.assign(rep(1, 0, 0), { failed: [{ doi: '10.5072/x.1', error: 'HTTP 503' }] }), '# Deposit check\n', '2026-12-09').body);
+  const changelog = read('CHANGELOG.md');
+  const unreleased = changelog.slice(changelog.indexOf('## Unreleased'), changelog.indexOf('\n## ', changelog.indexOf('## Unreleased') + 3));
+  const cadenceDocs = { 'paper/paper.md': read('paper/paper.md'), 'docs/joss.md': read('docs/joss.md'), 'scripts/weekly-issue.js': read('scripts/weekly-issue.js'),
+    'scripts/catalog-inputs.js': read('scripts/catalog-inputs.js'), 'verification/fixtures/README.md': read('verification/fixtures/README.md'),
+    'the Unreleased part of CHANGELOG.md': unreleased, 'the steps of run.yml': runYml.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n') };
+  const cp = cadenceProblems(runYml, issueHead, readme, cadenceDocs);
+  ok('the issue of the run, and the files that describe the run, name the schedule of the cron of run.yml (' + (cadenceOf(runYml) ? cadenceOf(runYml) + 'ly' : 'no cadence known') + ') and no other', unreleased.startsWith('## Unreleased') && cp.length === 0, cp.join('; '));
+  const cpBroken = [
+    cadenceProblems(runYml.replace("cron: '23 5 9 * *'", "cron: '23 5 * * 2'"), issueHead, readme, cadenceDocs),
+    cadenceProblems(runYml.replace("cron: '23 5 9 * *'", "cron: '23 5 9 */3 *'"), issueHead, readme, cadenceDocs),
+    cadenceProblems(runYml, issueHead.replace('updated each month', 'updated each week'), readme, cadenceDocs),
+    cadenceProblems(runYml, issueHead.replace('Monthly run, ', 'Weekly run, '), readme, cadenceDocs),
+    cadenceProblems(runYml, issueHead.replace('next month', 'next time'), readme, cadenceDocs),
+    cadenceProblems(runYml, issueHead, readme, Object.assign({}, cadenceDocs, { 'verification/fixtures/README.md': cadenceDocs['verification/fixtures/README.md'].replace('the monthly run reads', 'the weekly run reads') })),
+    cadenceProblems(runYml, issueHead, readme, Object.assign({}, cadenceDocs, { 'the Unreleased part of CHANGELOG.md': unreleased + '\n- The weekly issue keeps the findings.\n' })),
+    cadenceProblems(runYml, issueHead, readme.replace('by hand or once a month', 'by hand or once a week'), cadenceDocs),
+    cadenceProblems(runYml.replace('or once a month for', 'or once a week for'), issueHead, readme, cadenceDocs),
+    cadenceProblems(runYml, issueHead, readme.replace('月に一度の実行', '週に一度の実行'), cadenceDocs),
+    cadenceProblems(runYml, issueHead, readme, Object.assign({}, cadenceDocs, { 'docs/joss.md': cadenceDocs['docs/joss.md'].replace('月に一度の実行', '週に一度の実行') })),
+  ];
+  ok('break on purpose: a weekly cron, a quarterly cron, "each week" or "Weekly run" in the issue, "next month" dropped, the weekly run in the notes of the fixtures, in CHANGELOG.md, in the README, in the comment of run.yml, in Japanese in the README and in docs/joss.md (' + cpBroken.filter((b) => b.length).length + ' / ' + cpBroken.length + ')', cpBroken.every((b) => b.length > 0));
 
   /* ------------------------------------------------------------ 9 */
   {
