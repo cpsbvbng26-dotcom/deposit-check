@@ -19,7 +19,7 @@ bibliography: paper.bib
 ---
 
 <!-- Draft. Not submitted. JOSS asks for a repository public for more than six months; the earliest date is 2027-05-03.
-     Each DOI in paper.bib was read at Crossref or DataCite on 2026-11-25; paper/doi-sources.json records what each registry gave.
+     Each DOI in paper.bib was read at Crossref or DataCite on 2026-11-25; verification/paper-dois.json records what each registry gave.
      JOSS asks the authors to affirm that they reviewed, edited and validated all AI-assisted output and made the core design
      decisions, and to acknowledge any financial support. Both statements are the author's own. Claude, which drafted this
      paper, cannot make them for the author, and this draft does not contain them. -->
@@ -121,7 +121,7 @@ The assistance covered code generation, test generation, refactoring, the docume
 
 Correctness was checked by means that do not rely on the model's own account.
 The checks run on every push and pull request, without the network, and many of them break their own input on purpose and must see it fail.
-The paper's sections, length and citations are checked against `paper.bib`, and each DOI in `paper.bib` was read at Crossref or DataCite, which `paper/doi-sources.json` records.
+The paper's sections, length and citations are checked against `paper.bib`, and each DOI in `paper.bib` was read at Crossref or DataCite, which `verification/paper-dois.json` records.
 The tool was run against the live APIs on the author's own works.
 Claude is not an author.
 

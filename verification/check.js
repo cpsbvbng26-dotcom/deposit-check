@@ -305,7 +305,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
    * and for the sections Summary, Statement of need, State of the field, Software design, Research impact statement,
    * AI usage disclosure, Acknowledgements and References. The draft of 2026-11-03 was checked against 250 to 1000 words and
    * without Acknowledgements or the order. Each DOI of paper.bib was read at Crossref or DataCite on 2026-11-25, and
-   * paper/doi-sources.json records the title and year each registry gave; before, the check asked for no DOI at all.
+   * verification/paper-dois.json records the title and year each registry gave; before, the check asked for no DOI at all.
    * The numbers the paper writes in words are those of the code and of the run it names. The affirmation of human review
    * is the author's own statement, which Claude cannot make, so the draft must not claim it. Broken copies must fail. */
   const SECTIONS = ['Summary', 'Statement of need', 'State of the field', 'Software design', 'Research impact statement', 'AI usage disclosure', 'Acknowledgements', 'References'];
@@ -316,7 +316,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
   const runReport = read('docs/runs/2026-11-11-catalog/report.md');
   const runHead = /, (\d+) DOIs read\. (\d+) errors, (\d+) warnings, (\d+) notes\./.exec(runReport);
   const runAbstracts = (runReport.match(/^\| error \| No abstract in the DOI metadata \(`abstract-missing`\) \|/gm) || []).length;
-  const sources = JSON.parse(read('paper/doi-sources.json'));
+  const sources = JSON.parse(read('verification/paper-dois.json'));
   const flat = (s) => String(s).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
   const bibEntries = (b) => [...b.matchAll(/^@(\w+)\{([^,\n]+),\n([\s\S]*?)\n\}/gm)].map((m) => {
     const f = {};
@@ -360,7 +360,7 @@ const sink = () => { const s = { text: '', write: (t) => { s.text += t; } }; ret
     if (!runHead || !prose.includes('It read ' + inWords(Number(runHead[1])) + ' DOIs and found ' + inWords(Number(runHead[2])) + ' errors, ' + inWords(Number(runHead[3])) + ' warnings and ' + inWords(Number(runHead[4])) + ' notes.')) bad.push('the counts of the run of 2026-11-11');
     if (!prose.includes(cap(inWords(runAbstracts)) + ' Zenodo deposits had no abstract in their metadata')) bad.push('the abstracts missing in the run');
     if (!prose.includes('There is no record yet of use by other authors.')) bad.push('the research impact as it is');
-    if (!prose.includes('Claude is not an author.') || /name: .*Claude/.test(p) || !prose.includes('Claude Code (Anthropic)') || !prose.includes('Claude Opus 5 and Claude Opus 5.5') || !prose.includes('paper/doi-sources.json')) bad.push('the AI usage disclosure');
+    if (!prose.includes('Claude is not an author.') || /name: .*Claude/.test(p) || !prose.includes('Claude Code (Anthropic)') || !prose.includes('Claude Opus 5 and Claude Opus 5.5') || !prose.includes('verification/paper-dois.json')) bad.push('the AI usage disclosure');
     if (/\bthe author(s)? (decided|reviewed|validated|takes? responsibility)|\bhuman authors? (reviewed|edited|validated)/i.test(prose)) bad.push('an affirmation that only the author can make');
     if (!p.replace(/\s+/g, ' ').includes('Both statements are the author\'s own. Claude, which drafted this paper, cannot make them for the author, and this draft does not contain them.')) bad.push('the note on the affirmation');
     if (!p.includes('Draft. Not submitted.')) bad.push('the draft note');

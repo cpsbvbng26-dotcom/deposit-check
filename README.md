@@ -233,7 +233,7 @@ Personal information in the issues of this repository is handled as the section 
 
 A submission to the Journal of Open Source Software (JOSS) is planned.
 JOSS asks for a repository public for more than six months; the first commit here is from 2026-11-02, so the earliest date is 2027-05-03.
-A draft of the paper JOSS asks for is in `paper/paper.md` and `paper/paper.bib`, with the sections of JOSS's current guide. Each DOI in its references was read at Crossref or DataCite, and `paper/doi-sources.json` records what each registry gave. `.github/workflows/draft-pdf.yml` builds the draft PDF with the Open Journals action when `paper/` changes, and keeps it as an artifact of the run.
+A draft of the paper JOSS asks for is in `paper/paper.md` and `paper/paper.bib`, with the sections of JOSS's current guide. Each DOI in its references was read at Crossref or DataCite, and `verification/paper-dois.json` records what each registry gave. `.github/workflows/draft-pdf.yml` builds the draft PDF with the Open Journals action when `paper/` changes, and keeps it as an artifact of the run.
 There is no record yet of use by anyone but the author. Whether the tool is within the scope of JOSS is for JOSS to decide.
 
 ## Licence
